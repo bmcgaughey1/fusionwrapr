@@ -8,6 +8,21 @@
 # override options for specific calls to build and execute command lines.
 # this would also require functions to write comments to command file (preceded by a blank line),
 # clear the command  file, and (probably) run the command file
+
+
+# Some useful keyboard shortcuts for package authoring:
+#
+#   Install Package:           Ctrl + Shift + B
+#   Check Package:             Ctrl + Shift + E
+#   Test Package:              Ctrl + Shift + T
+#   Build documentation:       Ctrl + Shift + D...not working
+#   Build vignette:            Ctrl + Shift + K
+#
+# setwd("G:/R_Stuff/fusionr")
+#
+# To build documentation:
+# devtools::document()
+
 #
 # set up local environment to hold global variables
 fusionrEnv <- new.env(parent = emptyenv())
@@ -192,7 +207,7 @@ checkRunSaveFile <- function(runCmd, saveCmd, cmdFile) {
 #' @return A single integer value or vector of integers. If \code{required} is a vector of
 #'   strings and \code{runCmd = TRUE}, the return is a vector of return codes from the
 #'   operating system indicating the return values from the FUSION program. If \code{required}
-#'   is a vector of values, \code(runCmd = FALSE) and \code{saveCmd = TRUE}, the return
+#'   is a vector of values, \code{runCmd = FALSE} and \code{saveCmd = TRUE}, the return
 #'   is a vector of zeros. if \code{required} is a single string and \code{runCmd = TRUE},
 #'   the return is the return value from the FUSION program. If \code{required} is a single
 #'   string and \code{runCmd = FALSE} and \code{saveaCmd = TRUE}, the return value is 0.
@@ -252,42 +267,42 @@ setFUSIONpath <- function(installPath) {
 #'
 #' /code{ClipData} creates command lines for the FUSION ClipData program and optionally executes them.
 #'
-#' @param InputSpecifier
-#' @param SampleFile
-#' @param MinX
-#' @param MinY
-#' @param MaxX
-#' @param MaxY
-#' @param quiet
-#' @param verbose
-#' @param version
-#' @param newlog
-#' @param log
-#' @param locale
-#' @param nolaszipdll
-#' @param shape
-#' @param decimate
-#' @param ground
-#' @param zmin
-#' @param zmax
-#' @param zpercent
-#' @param height
-#' @param timemin
-#' @param timemmax
-#' @param anglemin
-#' @param anglemax
-#' @param zero
-#' @param biaselev
-#' @param return
-#' @param class
-#' @param ignoreoverlap
-#' @param line
-#' @param noindex
-#' @param index
-#' @param lda
-#' @param nooffset
-#' @param cleanlas
-#' @param precision
+#' @param InputSpecifier a
+#' @param SampleFile a
+#' @param MinX a
+#' @param MinY a
+#' @param MaxX a
+#' @param MaxY a
+#' @param quiet a
+#' @param verbose a
+#' @param version a
+#' @param newlog a
+#' @param log a
+#' @param locale a
+#' @param nolaszipdll a
+#' @param shape a
+#' @param decimate a
+#' @param ground a
+#' @param zmin a
+#' @param zmax a
+#' @param zpercent a
+#' @param height a
+#' @param timemin a
+#' @param timemmax a
+#' @param anglemin a
+#' @param anglemax a
+#' @param zero a
+#' @param biaselev a
+#' @param return a
+#' @param class a
+#' @param ignoreoverlap a
+#' @param line a
+#' @param noindex a
+#' @param index a
+#' @param lda a
+#' @param nooffset a
+#' @param cleanlas a
+#' @param precision a
 #' @param use64bit boolean value indicating 64-bit version of the program
 #'   specified in \code{name} should be used.
 #' @param runCmd boolean indicating command line should be executed.
@@ -445,32 +460,32 @@ ClipData <- function(
 #'
 #' /code{CloudMetrics} creates command lines for the FUSION CloudMetrics program and optionally executes them.
 #'
-#' @param InputSpecifier
-#' @param OutputFile
-#' @param quiet
-#' @param verbose
-#' @param version
-#' @param newlog
-#' @param log
-#' @param locale
-#' @param nolaszipdll
-#' @param above
-#' @param new
-#' @param firstinpulse
-#' @param firstreturn
-#' @param highpoint
-#' @param subset
-#' @param id
-#' @param rid
-#' @param pa
-#' @param minht
-#' @param maxht
-#' @param outlier
-#' @param ignoreoverlap
-#' @param strata
-#' @param intstrata
-#' @param kde
-#' @param rgb
+#' @param InputSpecifier A
+#' @param OutputFile A
+#' @param quiet A
+#' @param verbose A
+#' @param version a
+#' @param newlog a
+#' @param log a
+#' @param locale a
+#' @param nolaszipdll a
+#' @param above a
+#' @param new a
+#' @param firstinpulse a
+#' @param firstreturn a
+#' @param highpoint a
+#' @param subset a
+#' @param id a
+#' @param rid a
+#' @param pa a
+#' @param minht a
+#' @param maxht a
+#' @param outlier a
+#' @param ignoreoverlap a
+#' @param strata a
+#' @param intstrata a
+#' @param kde a
+#' @param rgb a
 #' @param use64bit boolean value indicating 64-bit version of the program
 #'   specified in \code{name} should be used.
 #' @param runCmd boolean indicating command line should be executed.
@@ -586,11 +601,3 @@ CloudMetrics <- function(
 
   invisible(paste(cmd, options, required))
 }
-
-
-cmd <- ClipData(c("1.las", "2.las", "3.las"), "aaa/test.las", ground = "test.dtm", zmin = 2.0, echoCmd = TRUE, runCmd = FALSE, cmdFile = "test.bat")
-cat(cmd)
-
-cmd <- CloudMetrics("*.las", "aaa/test.csv", minht = 2.0, runCmd = FALSE, echoCmd = TRUE, cmdFile = "test.bat")
-cat(cmd)
-
