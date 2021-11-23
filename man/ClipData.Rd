@@ -50,95 +50,140 @@ ClipData(
 )
 }
 \arguments{
-\item{InputSpecifier}{a}
+\item{InputSpecifier}{character: LIDAR data file template, name of a text file containing
+a list of file names (must have .txt extension), or a
+FUSION catalog file.}
 
-\item{SampleFile}{a}
+\item{SampleFile}{character: Name for subsample file (extension will be added) or a
+text file containing sample information for 1 or more samples.
+Each line in the text file should have the output filename
+and the MinX MinY MaxX MaxY values for the sample area separated
+by spaces or commas. The output filename cannot contain spaces.
+To save compressed LAS files, specify the .laz extension.}
 
-\item{MinX}{a}
+\item{MinX}{numeric: X for lower left corner of the sample area bounding box.}
 
-\item{MinY}{a}
+\item{MinY}{numeric: Y for lower left corner of the sample area bounding box.}
 
-\item{MaxX}{a}
+\item{MaxX}{numeric: X for upper right corner of the sample area bounding box.}
 
-\item{MaxY}{a}
+\item{MaxY}{numeric: Y for upper right corner of the sample area bounding box.}
 
-\item{quiet}{a}
+\item{quiet}{boolean: Suppress all output during the run.}
 
-\item{verbose}{a}
+\item{verbose}{boolean: Display all status information during the run.}
 
-\item{version}{a}
+\item{version}{boolean: Report version information and exit with no processing.}
 
-\item{newlog}{a}
+\item{newlog}{boolean: Erase the existing log file and start a new log}
 
-\item{log}{a}
+\item{log}{character: Use the name specified for the log file.}
 
-\item{locale}{a}
+\item{locale}{boolean: Adjust program logic to input and output locale-specific numeric
+formats (e.g. use a comma for the decimal separator).}
 
-\item{nolaszipdll}{a}
+\item{nolaszipdll}{boolean: Suppress the use of the LASzip dll (c) Martin Isenburg...
+removes support for compressed LAS (LAZ) files. This option
+is only useful for programs that read or write point files.}
 
-\item{shape}{a}
+\item{shape}{numeric: Shape of the sample area (0 = rectangle, 1 = circle).}
 
-\item{decimate}{a}
+\item{decimate}{numeric: Skip # points between included points (must be > 0).}
 
-\item{ground}{a}
+\item{ground}{character: Use a surface file with /zmin to include points above zmin
+or with /zmax to include points below zmax. file may be
+wildcard or text list file (extension .txt only). file
+must be in FUSION/PLANS format.}
 
-\item{zmin}{a}
+\item{zmin}{numeric: Include points above # elevation..use with /dtm to include points
+above # height. Use with /height option to store heights in
+output file.}
 
-\item{zmax}{a}
+\item{zmax}{numeric: Include points below # elevation..use with /dtm to include points
+below # height. Use with /height option to store heights in
+output file.}
 
-\item{zpercent}{a}
+\item{zpercent}{numeric: Include only the upper # percent of the points..if # is (-) only
+the lower # percent of the points..# = 0-100.}
 
-\item{height}{a}
+\item{height}{boolean: Convert point elevations into heights above ground using the
+specified DTM file..use with /dtm.}
 
-\item{timemin}{a}
+\item{timemin}{numeric: Include points with GPS times greater than # (LAS only).}
 
-\item{anglemin}{a}
+\item{timemax}{numeric: Include points with GPS times less than or equal to # (LAS only).
+Interpretation of # depends on the GPS time recorded in the LAS
+point records.}
 
-\item{anglemax}{a}
+\item{anglemin}{numeric: Include points with scan angles greater than # (LAS only).}
 
-\item{zero}{a}
+\item{anglemax}{numeric: Include points with scan angles less than or equal to # (LAS only).}
 
-\item{biaselev}{a}
+\item{zero}{boolean: Save subsample files that contain no data points.}
 
-\item{return}{a}
+\item{biaselev}{numeric: Add an elevation offset to every LIDAR point..# can be + or -.}
 
-\item{class}{a}
+\item{return}{character: "c,c,c,...": Specifies the returns to be included in the sample (can
+include A,1,2,3,4,5,6,7,8,9,F,L,O) Options are specified without
+commas (e.g. /return:123) For LAS files only: F indicates first
+and only returns, L indicates last of many returns.}
 
-\item{ignoreoverlap}{a}
+\item{class}{character: "c,c,c,...": LAS files only: Specifies that only points with classification
+values listed are to be included in the subsample.
+Classification values should be separated by a comma.
+e.g. (2,3,4,5) and can range from 0 to 31.
+If the first character in string is ~, the list is interpretted
+as the classes you DO NOT want included in the subsample.
+e.g. /class:~2,3 would include all class values EXCEPT 2 and 3.}
 
-\item{line}{a}
+\item{ignoreoverlap}{boolean: Ignore points with the overlap flag set (LAS V1.4+ format).}
 
-\item{noindex}{a}
+\item{line}{numeric: LAS files only: Only include returns from the specified flight
+line. Line numbering varies by acquisition so you need to know
+your data to specify values for the flight line number.}
 
-\item{index}{a}
+\item{noindex}{boolean: Do not use the data index files to access the data files.}
 
-\item{lda}{a}
+\item{index}{boolean: Create FUSION index files for the SampleFile.}
 
-\item{nooffset}{a}
+\item{lda}{boolean: Write sample files using FUSION's LDA format when using LAS input
+files. The default behavior of ClipData (after version 2.35) is
+to write data in LAS format when the input data are in LAS
+format. When using input data in a format other than LAS, sample
+files are written in LDA format.}
 
-\item{cleanlas}{a}
+\item{nooffset}{boolean: Removes the offset value in the output LAS file making it
+difficult to pinpoint the location of the point cloud. This is
+typically used when the location of a sample cannot be known.}
 
-\item{precision}{a}
+\item{cleanlas}{boolean: Only output points that adhere to the LAS format specification
+(valid GPS time, return # from 1 to 5, within header extent,
+points not flagged as withheld. Valid for LAS format input.}
 
-\item{use64bit}{boolean value indicating 64-bit version of the program
-specified in \code{name} should be used.}
+\item{precision}{character: "#,#,#": Control the scale factor used for X, Y, and Z
+values in output LAS files. These values will override the values
+in the source LAS files. There is rarely any need for the scale
+parameters to be smaller than 0.001.}
 
-\item{runCmd}{boolean indicating command line should be executed.}
+\item{use64bit}{boolean: indicates 64-bit version of the program
+should be used.}
 
-\item{saveCmd}{boolean indicating command line should be written to a file.}
+\item{runCmd}{boolean: indicates command line should be executed.}
 
-\item{cmdFile}{character string containing the name of the file to which commands
+\item{saveCmd}{boolean: indicates command line should be written to a file.}
+
+\item{cmdFile}{character: contains the name of the file to which commands
 should be written.}
 
-\item{cmdClear}{boolean indicating file for command should be deleted before the command
+\item{cmdClear}{boolean: indicates file for command should be deleted before the command
 line is written.}
 
-\item{echoCmd}{boolean indicating commadn line should be diasplayed.}
-
-\item{timemmax}{a}
+\item{echoCmd}{boolean: indicates command line should be displayed.}
 }
 \value{
-character string containing the \code{installPath} passed to the function.
+Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
+  the (invisible) integer value return from the operating system after running the command.
+  if \code{runCmd = FALSE}, return value is the (invisible) command line.
 }
 \description{
 /code{ClipData} creates command lines for the FUSION ClipData program and optionally executes them.

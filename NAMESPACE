@@ -2,5 +2,6 @@
 
 export(ClipData)
 export(CloudMetrics)
+export(GridSurfaceCreate)
 export(setFUSIONpath)
 export(verifyFolder)

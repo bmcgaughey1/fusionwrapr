@@ -18,6 +18,7 @@ CloudMetrics(
   new = FALSE,
   firstinpulse = FALSE,
   firstreturn = FALSE,
+  first = FALSE,
   highpoint = FALSE,
   subset = FALSE,
   id = FALSE,
@@ -40,75 +41,123 @@ CloudMetrics(
 )
 }
 \arguments{
-\item{InputSpecifier}{A}
+\item{InputSpecifier}{character: LIDAR data file template, name of text file containing a
+list of file names (must have .txt extension), or a catalog file.}
 
-\item{OutputFile}{A}
+\item{OutputFile}{character: Name for output file to contain cloud metrics (usually .csv extension).}
 
-\item{quiet}{A}
+\item{quiet}{boolean: Suppress all output during the run.}
 
-\item{verbose}{A}
+\item{verbose}{boolean: Display all status information during the run.}
 
-\item{version}{a}
+\item{version}{boolean: Report version information and exit with no processing.}
 
-\item{newlog}{a}
+\item{newlog}{boolean: Erase the existing log file and start a new log.}
 
-\item{log}{a}
+\item{log}{character string: Use the name specified for the log file.}
 
-\item{locale}{a}
+\item{locale}{boolean: Adjust program logic to input and output locale-specific numeric
+formats (e.g. use a comma for the decimal separator).}
 
-\item{nolaszipdll}{a}
+\item{nolaszipdll}{boolean: Suppress the use of the LASzip dll (c) Martin Isenburg...
+removes support for compressed LAS (LAZ) files. This option
+is only useful for programs that read or write point files.}
 
-\item{above}{a}
+\item{above}{numeric: Compute proportion of first returns above # (canopy cover).
+Also compute the proportion of all returns above # and the
+(number of returns above #) / (total number of 1st returns).
+The same metrics are also computed using the mean and mode
+point elevation (or height) values. Starting with version
+2.0 of CloudMetrics, the /relcover and /alldensity options were
+removed. All cover metrics are computed when the /above:#
+switch is used.}
 
-\item{new}{a}
+\item{new}{boolean: Start new output file...delete existing output file.}
 
-\item{firstinpulse}{a}
+\item{firstinpulse}{boolean: Use only the first return for the pulse to compute metrics.}
 
-\item{firstreturn}{a}
+\item{firstreturn}{boolean: Use only first returns to compute metrics.}
 
-\item{highpoint}{a}
+\item{first}{boolean: Use only first returns to compute metrics (same as \code{firstreturn}).}
 
-\item{subset}{a}
+\item{highpoint}{boolean: Produce a limited set of metrics ([ID],#pts,highX,highY,highZ).}
 
-\item{id}{a}
+\item{subset}{boolean: Produce a limited set of metrics([ID],#pts,Mean ht,Std dev ht,
+75th percentile,cover)...must be used with /above:#.}
 
-\item{rid}{a}
+\item{id}{boolean: Parse an identifier from the beginning of the data file name...
+output as the first column of data.}
 
-\item{pa}{a}
+\item{rid}{boolean: Parse an identifier from the end of the data file name...
+output as the first column of data.}
 
-\item{minht}{a}
+\item{pa}{boolean: Output detailed percentile data used to compute the canopy
+profile area. Output file name uses the base output name with
+_percentile appended.}
 
-\item{maxht}{a}
+\item{minht}{numeric: Use only returns above # (use when data is normalized to ground)
+Prior to version 2.20 this switch was /htmin. /htmin can still
+be used but /minht is preferred. The minht is not used when
+computing metrics related to the /strata and /intstrata options.}
 
-\item{outlier}{a}
+\item{maxht}{numeric: Use only returns below # (use when data is normalized to ground)
+to compute metrics. The maxht is not used when computing metrics
+related to the /strata or /intstrata options.}
 
-\item{ignoreoverlap}{a}
+\item{outlier}{character: "low,high": Omit points with elevations below low and above high.
+When used with data that has been normalized using a ground
+surface, low and high are interpreted as heights above ground.
+You should use care when using /outlier:low,high with /minht and
+/maxht options. If the low value specified with /outlier is above
+the value specified with /minht, the value for /outlier will
+override the value specified for /minht. Similarly, if the high
+value specified with /outlier is less than the value specified
+for /maxht, the /outlier value will override the value for
+/maxht.}
 
-\item{strata}{a}
+\item{ignoreoverlap}{boolean: Ignore points with the overlap flag set (LAS V1.4+ format).}
 
-\item{intstrata}{a}
+\item{strata}{character: "#,#,#,...": Count returns in various height strata. # gives the upper
+limit for each strata. Returns are counted if their height
+is >= the lower limit and < the upper limit. The first strata
+contains points < the first limit. The last strata contains
+points >= the last limit. Default strata: 0.15, 1.37, 5, 10,
+20, 30.}
 
-\item{kde}{a}
+\item{intstrata}{character: "#, #, #,...": Compute metrics using the intensity values in various
+height strata. Strata for intensity metrics are defined in
+the same way as the /strata option. Default strata: 0.25, 1.37.}
 
-\item{rgb}{a}
+\item{kde}{character: "window,mult": Compute the number of modes and minimum and maximum node
+using a kernal density estimator. Window is the width of a
+moving average smoothing window in data units and mult is a
+multiplier for the bandwidth parameter of the KDE. Default
+window is 2.5 and the multiplier is 1.0.}
 
-\item{use64bit}{boolean value indicating 64-bit version of the program
-specified in \code{name} should be used.}
+\item{rgb}{character: "color": Compute intensity metrics using the color value from the RGB
+color for the returns. Valid with LAS version 1.2 and newer
+data files that contain RGB information for each return (point
+record types 2 and 3). Valid color values are R, G, or B.}
 
-\item{runCmd}{boolean indicating command line should be executed.}
+\item{use64bit}{boolean: indicates 64-bit version of the program
+should be used.}
 
-\item{saveCmd}{boolean indicating command line should be written to a file.}
+\item{runCmd}{boolean: indicates command line should be executed.}
 
-\item{cmdFile}{character string containing the name of the file to which commands
+\item{saveCmd}{boolean: indicates command line should be written to a file.}
+
+\item{cmdFile}{character: contains the name of the file to which commands
 should be written.}
 
-\item{cmdClear}{boolean indicating file for command should be deleted before the command
+\item{cmdClear}{boolean: indicates file for command should be deleted before the command
 line is written.}
 
-\item{echoCmd}{boolean indicating commadn line should be diasplayed.}
+\item{echoCmd}{boolean: indicates command line should be displayed.}
 }
 \value{
-character string containing the \code{installPath} passed to the function.
+Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
+  the (invisible) integer value return from the operating system after running the command.
+  if \code{runCmd = FALSE}, return value is the (invisible) command line.
 }
 \description{
 /code{CloudMetrics} creates command lines for the FUSION CloudMetrics program and optionally executes them.

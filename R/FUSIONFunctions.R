@@ -77,7 +77,21 @@ verifyFolder <- function(folder) {
 #'   FALSE indicates the object value is NULL.
 isOpt <- function(x) { invisible(!is.null(x)) }
 
-# build text for true/false switch
+# ---------- addSwitch
+#
+#' FUSION R command line interface -- Build text string for a command line option.
+#'
+#' This is a helper function used in the fusionr package to build the text string
+#' for command line switches. The resulting string is appended to \code{cl}.
+#'
+#' @param cl character string. Potentially contains other command line elements.
+#' @param opt object containing the switch value. The name of the object is used
+#'   when constructing the option text.
+#' @return A (invisible) string containing the modified \code{cl} string.
+#' @examples
+#' \dontrun{
+#' addOption(cl, zmin)
+#' }
 addSwitch <- function(cl, opt) {
   if (opt) {
     cl <- paste(cl, paste0("/", deparse(substitute(opt))))
@@ -95,7 +109,7 @@ addSwitch <- function(cl, opt) {
 #'
 #' @param cl character string. Potentially contains other command line elements.
 #' @param opt object containing the option value. The name of the object and the
-#'   value are used when construction of the option text.
+#'   value are used when constructing the option text.
 #' @param quote boolean indicating the entire option should be enclosed in quotes.
 #' @return A (invisible) string containing the modified \code{cl} string.
 #' @examples
@@ -188,7 +202,7 @@ checkRunSaveFile <- function(runCmd, saveCmd, cmdFile) {
   invisible(TRUE)
 }
 
-# ---------- dispatchCmd
+# ---------- dispatchCommand
 #
 #' FUSION R command line interface -- Execute command lines or write them to a file.
 #'
@@ -213,10 +227,11 @@ checkRunSaveFile <- function(runCmd, saveCmd, cmdFile) {
 #'   string and \code{runCmd = FALSE} and \code{saveaCmd = TRUE}, the return value is 0.
 #' @examples
 #' \dontrun{
-#' dispatchCmd("ClipData", "/minht:2.0", "*.las clip1.las", runCmd = TRUE)
-#' dispatchCmd("ClipData", "/minht:2.0", "*.las clip1.las", runCmd = FALSE, cmdClear = TRUE, cmdFile = "test.bat")
+#' dispatchCommand("ClipData", "/minht:2.0", "*.las clip1.las", runCmd = TRUE)
+#' dispatchCommand("ClipData", "/minht:2.0", "*.las clip1.las",
+#'                  runCmd = FALSE, cmdClear = TRUE, cmdFile = "test.bat")
 #' }
-dispatchCmd <- function(cmd, options, required, runCmd, saveCmd, cmdClear, cmdFile) {
+dispatchCommand <- function(cmd, options, required, runCmd, saveCmd, cmdClear, cmdFile) {
   # when runCmd=TRUE, saveCmd is never referenced. when runCmd=FALSE, the default is to write cmd to file
   # with runCmd=FALSE and saveCmd=FALSE, command is returned only (invisible)
   ret <- lapply(required, function(x) {
@@ -225,13 +240,53 @@ dispatchCmd <- function(cmd, options, required, runCmd, saveCmd, cmdClear, cmdFi
       } else {
         if (saveCmd) {
           if (cmdClear) unlink(cmdFile)
-          cat(paste0(paste(cmd, options, x), "\n"), file = cmdFile, append = TRUE)
+          cat(paste0(buildCommand(cmd, options, x), "\n"), file = cmdFile, append = TRUE)
         }
         ret <- 0
       }
     }
   )
   invisible(ret)
+}
+
+# ---------- echoCommand
+#
+#' FUSION R command line interface -- Construct and echo the command line.
+#'
+#' This is a helper function used in the fusionr package to construct and echo the command
+#' line (depending of value of echoCmd parameter).
+#'
+#' @param cmd character string containing the program name and possibly the path.
+#' @param options character string containing command line options.
+#' @param required character string(s) containing required parameters for the command line.
+#' @param echoCmd boolean indicating command line should be echoed using message().
+#' @return boolean TRUE
+#' @examples
+#' \dontrun{
+#' echoCommand("ClipData", "/minht:2.0", "*.las clip1.las", echoCmd = TRUE)
+#' }
+echoCommand <- function(cmd, options, required, echoCmd) {
+  if (echoCmd) message(buildCommand(cmd, options, required))
+
+  invisible(TRUE)
+}
+
+# ---------- buildCommand
+#
+#' FUSION R command line interface -- Construct the command line.
+#'
+#' This is a helper function used in the fusionr package to construct the command line.
+#'
+#' @param cmd character string containing the program name and possibly the path.
+#' @param options character string containing command line options.
+#' @param required character string(s) containing required parameters for the command line.
+#' @return invisible string containing complete command line
+#' @examples
+#' \dontrun{
+#' buildCommand("ClipData", "/minht:2.0", "*.las clip1.las")
+#' }
+buildCommand <- function(cmd, options, required) {
+  invisible(paste(trimws(cmd), trimws(options), trimws(required)))
 }
 
 # ---------- setFUSIONpath
@@ -247,8 +302,7 @@ dispatchCmd <- function(cmd, options, required, runCmd, saveCmd, cmdClear, cmdFi
 #' @return character string containing the \code{installPath} passed to the function.
 #' @examples
 #' \dontrun{
-#' dispatchCmd("ClipData", "/minht:2.0", "*.las clip1.las", runCmd = TRUE)
-#' dispatchCmd("ClipData", "/minht:2.0", "*.las clip1.las", runCmd = FALSE, cmdClear = TRUE, cmdFile = "test.bat")
+#' setFUSIONpath("C:/FUSION/")
 #' }
 #' @export
 setFUSIONpath <- function(installPath) {
@@ -267,52 +321,97 @@ setFUSIONpath <- function(installPath) {
 #'
 #' /code{ClipData} creates command lines for the FUSION ClipData program and optionally executes them.
 #'
-#' @param InputSpecifier a
-#' @param SampleFile a
-#' @param MinX a
-#' @param MinY a
-#' @param MaxX a
-#' @param MaxY a
-#' @param quiet a
-#' @param verbose a
-#' @param version a
-#' @param newlog a
-#' @param log a
-#' @param locale a
-#' @param nolaszipdll a
-#' @param shape a
-#' @param decimate a
-#' @param ground a
-#' @param zmin a
-#' @param zmax a
-#' @param zpercent a
-#' @param height a
-#' @param timemin a
-#' @param timemmax a
-#' @param anglemin a
-#' @param anglemax a
-#' @param zero a
-#' @param biaselev a
-#' @param return a
-#' @param class a
-#' @param ignoreoverlap a
-#' @param line a
-#' @param noindex a
-#' @param index a
-#' @param lda a
-#' @param nooffset a
-#' @param cleanlas a
-#' @param precision a
-#' @param use64bit boolean value indicating 64-bit version of the program
-#'   specified in \code{name} should be used.
-#' @param runCmd boolean indicating command line should be executed.
-#' @param saveCmd boolean indicating command line should be written to a file.
-#' @param cmdFile character string containing the name of the file to which commands
+#' @param InputSpecifier character: LIDAR data file template, name of a text file containing
+#'   a list of file names (must have .txt extension), or a
+#'   FUSION catalog file.
+#' @param SampleFile character: Name for subsample file (extension will be added) or a
+#'   text file containing sample information for 1 or more samples.
+#'   Each line in the text file should have the output filename
+#'   and the MinX MinY MaxX MaxY values for the sample area separated
+#'   by spaces or commas. The output filename cannot contain spaces.
+#'   To save compressed LAS files, specify the .laz extension.
+#' @param MinX numeric: X for lower left corner of the sample area bounding box.
+#' @param MinY numeric: Y for lower left corner of the sample area bounding box.
+#' @param MaxX numeric: X for upper right corner of the sample area bounding box.
+#' @param MaxY numeric: Y for upper right corner of the sample area bounding box.
+#' @param quiet boolean: Suppress all output during the run.
+#' @param verbose boolean: Display all status information during the run.
+#' @param version boolean: Report version information and exit with no processing.
+#' @param newlog boolean: Erase the existing log file and start a new log
+#' @param log character: Use the name specified for the log file.
+#' @param locale boolean: Adjust program logic to input and output locale-specific numeric
+#'   formats (e.g. use a comma for the decimal separator).
+#' @param nolaszipdll boolean: Suppress the use of the LASzip dll (c) Martin Isenburg...
+#'   removes support for compressed LAS (LAZ) files. This option
+#'   is only useful for programs that read or write point files.
+#' @param shape numeric: Shape of the sample area (0 = rectangle, 1 = circle).
+#' @param decimate numeric: Skip # points between included points (must be > 0).
+#' @param ground character: Use a surface file with /zmin to include points above zmin
+#'   or with /zmax to include points below zmax. file may be
+#'   wildcard or text list file (extension .txt only). file
+#'   must be in FUSION/PLANS format.
+#' @param zmin numeric: Include points above # elevation..use with /dtm to include points
+#'   above # height. Use with /height option to store heights in
+#'   output file.
+#' @param zmax numeric: Include points below # elevation..use with /dtm to include points
+#'   below # height. Use with /height option to store heights in
+#'   output file.
+#' @param zpercent numeric: Include only the upper # percent of the points..if # is (-) only
+#'   the lower # percent of the points..# = 0-100.
+#' @param height boolean: Convert point elevations into heights above ground using the
+#'   specified DTM file..use with /dtm.
+#' @param timemin numeric: Include points with GPS times greater than # (LAS only).
+#' @param timemax numeric: Include points with GPS times less than or equal to # (LAS only).
+#'   Interpretation of # depends on the GPS time recorded in the LAS
+#'   point records.
+#' @param anglemin numeric: Include points with scan angles greater than # (LAS only).
+#' @param anglemax numeric: Include points with scan angles less than or equal to # (LAS only).
+#' @param zero boolean: Save subsample files that contain no data points.
+#' @param biaselev numeric: Add an elevation offset to every LIDAR point..# can be + or -.
+#' @param return character: "c,c,c,...": Specifies the returns to be included in the sample (can
+#'   include A,1,2,3,4,5,6,7,8,9,F,L,O) Options are specified without
+#'   commas (e.g. /return:123) For LAS files only: F indicates first
+#'   and only returns, L indicates last of many returns.
+#' @param class character: "c,c,c,...": LAS files only: Specifies that only points with classification
+#'   values listed are to be included in the subsample.
+#'   Classification values should be separated by a comma.
+#'   e.g. (2,3,4,5) and can range from 0 to 31.
+#'   If the first character in string is ~, the list is interpretted
+#'   as the classes you DO NOT want included in the subsample.
+#'   e.g. /class:~2,3 would include all class values EXCEPT 2 and 3.
+#' @param ignoreoverlap boolean: Ignore points with the overlap flag set (LAS V1.4+ format).
+#' @param line numeric: LAS files only: Only include returns from the specified flight
+#'   line. Line numbering varies by acquisition so you need to know
+#'   your data to specify values for the flight line number.
+#' @param noindex boolean: Do not use the data index files to access the data files.
+#' @param index boolean: Create FUSION index files for the SampleFile.
+#' @param lda boolean: Write sample files using FUSION's LDA format when using LAS input
+#'   files. The default behavior of ClipData (after version 2.35) is
+#'   to write data in LAS format when the input data are in LAS
+#'   format. When using input data in a format other than LAS, sample
+#'   files are written in LDA format.
+#' @param nooffset boolean: Removes the offset value in the output LAS file making it
+#'   difficult to pinpoint the location of the point cloud. This is
+#'   typically used when the location of a sample cannot be known.
+#' @param cleanlas boolean: Only output points that adhere to the LAS format specification
+#'   (valid GPS time, return # from 1 to 5, within header extent,
+#'   points not flagged as withheld. Valid for LAS format input.
+#' @param precision character: "#,#,#": Control the scale factor used for X, Y, and Z
+#'   values in output LAS files. These values will override the values
+#'   in the source LAS files. There is rarely any need for the scale
+#'   parameters to be smaller than 0.001.
+#' @param use64bit boolean: indicates 64-bit version of the program
+#'   should be used.
+#' @param runCmd boolean: indicates command line should be executed.
+#' @param saveCmd boolean: indicates command line should be written to a file.
+#' @param cmdFile character: contains the name of the file to which commands
 #'   should be written.
-#' @param cmdClear boolean indicating file for command should be deleted before the command
+#' @param cmdClear boolean: indicates file for command should be deleted before the command
 #'   line is written.
-#' @param echoCmd boolean indicating commadn line should be diasplayed.
-#' @return character string containing the \code{installPath} passed to the function.
+#' @param echoCmd boolean: indicates command line should be displayed.
+#' @return Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
+#'   the (invisible) integer value return from the operating system after running the command.
+#'   if \code{runCmd = FALSE}, return value is the (invisible) command line.
 #' @examples
 #' \dontrun{
 #' ClipData("*.las", "clip1.las", ground = "small.dtm", height = TRUE)
@@ -372,7 +471,7 @@ ClipData <- function(
   # check for option to run command...if FALSE, check for command file name
   checkRunSaveFile(runCmd, saveCmd, cmdFile)
 
-  # check for folder included in SampleFile...will create if it doesn't exist
+  # check for folder included in output...will create if it doesn't exist
   verifyFolder(dirname(SampleFile))
 
   # if InputSpecifier and SampleFile are different lengths, there is some work to do...
@@ -446,11 +545,15 @@ ClipData <- function(
   required <- addRequired(required, MaxX)
   required <- addRequired(required, MaxY)
 
-  if (echoCmd) message(paste(cmd, options, required, "\n"))
+  echoCommand(cmd, options, required, echoCmd)
 
-  dispatchCmd(cmd, options, required, runCmd, saveCmd, cmdClear, cmdFile)
+  ret <- dispatchCommand(cmd, options, required, runCmd, saveCmd, cmdClear, cmdFile)
 
-  invisible(paste(cmd, options, required))
+  if (runCmd) {
+    invisible(ret)
+  } else {
+    invisible(buildCommand(cmd, options, required))
+  }
 }
 
 # CloudMetrics
@@ -460,42 +563,89 @@ ClipData <- function(
 #'
 #' /code{CloudMetrics} creates command lines for the FUSION CloudMetrics program and optionally executes them.
 #'
-#' @param InputSpecifier A
-#' @param OutputFile A
-#' @param quiet A
-#' @param verbose A
-#' @param version a
-#' @param newlog a
-#' @param log a
-#' @param locale a
-#' @param nolaszipdll a
-#' @param above a
-#' @param new a
-#' @param firstinpulse a
-#' @param firstreturn a
-#' @param highpoint a
-#' @param subset a
-#' @param id a
-#' @param rid a
-#' @param pa a
-#' @param minht a
-#' @param maxht a
-#' @param outlier a
-#' @param ignoreoverlap a
-#' @param strata a
-#' @param intstrata a
-#' @param kde a
-#' @param rgb a
-#' @param use64bit boolean value indicating 64-bit version of the program
-#'   specified in \code{name} should be used.
-#' @param runCmd boolean indicating command line should be executed.
-#' @param saveCmd boolean indicating command line should be written to a file.
-#' @param cmdFile character string containing the name of the file to which commands
+#' @param InputSpecifier  character: LIDAR data file template, name of text file containing a
+#'   list of file names (must have .txt extension), or a catalog file.
+#' @param OutputFile character: Name for output file to contain cloud metrics (usually .csv extension).
+#' @param quiet boolean: Suppress all output during the run.
+#' @param verbose boolean: Display all status information during the run.
+#' @param version boolean: Report version information and exit with no processing.
+#' @param newlog boolean: Erase the existing log file and start a new log.
+#' @param log character string: Use the name specified for the log file.
+#' @param locale boolean: Adjust program logic to input and output locale-specific numeric
+#'   formats (e.g. use a comma for the decimal separator).
+#' @param nolaszipdll boolean: Suppress the use of the LASzip dll (c) Martin Isenburg...
+#'   removes support for compressed LAS (LAZ) files. This option
+#'   is only useful for programs that read or write point files.
+#' @param above numeric: Compute proportion of first returns above # (canopy cover).
+#'   Also compute the proportion of all returns above # and the
+#'   (number of returns above #) / (total number of 1st returns).
+#'   The same metrics are also computed using the mean and mode
+#'   point elevation (or height) values. Starting with version
+#'   2.0 of CloudMetrics, the /relcover and /alldensity options were
+#'   removed. All cover metrics are computed when the /above:#
+#'   switch is used.
+#' @param new boolean: Start new output file...delete existing output file.
+#' @param firstinpulse boolean: Use only the first return for the pulse to compute metrics.
+#' @param firstreturn boolean: Use only first returns to compute metrics.
+#' @param first boolean: Use only first returns to compute metrics (same as \code{firstreturn}).
+#' @param highpoint boolean: Produce a limited set of metrics ([ID],#pts,highX,highY,highZ).
+#' @param subset boolean: Produce a limited set of metrics([ID],#pts,Mean ht,Std dev ht,
+#'   75th percentile,cover)...must be used with /above:#.
+#' @param id boolean: Parse an identifier from the beginning of the data file name...
+#'   output as the first column of data.
+#' @param rid  boolean: Parse an identifier from the end of the data file name...
+#'   output as the first column of data.
+#' @param pa boolean: Output detailed percentile data used to compute the canopy
+#'   profile area. Output file name uses the base output name with
+#'   _percentile appended.
+#' @param minht numeric: Use only returns above # (use when data is normalized to ground)
+#'   Prior to version 2.20 this switch was /htmin. /htmin can still
+#'   be used but /minht is preferred. The minht is not used when
+#'   computing metrics related to the /strata and /intstrata options.
+#' @param maxht numeric: Use only returns below # (use when data is normalized to ground)
+#'   to compute metrics. The maxht is not used when computing metrics
+#'   related to the /strata or /intstrata options.
+#' @param outlier character: "low,high": Omit points with elevations below low and above high.
+#'   When used with data that has been normalized using a ground
+#'   surface, low and high are interpreted as heights above ground.
+#'   You should use care when using /outlier:low,high with /minht and
+#'   /maxht options. If the low value specified with /outlier is above
+#'   the value specified with /minht, the value for /outlier will
+#'   override the value specified for /minht. Similarly, if the high
+#'   value specified with /outlier is less than the value specified
+#'   for /maxht, the /outlier value will override the value for
+#'   /maxht.
+#' @param ignoreoverlap boolean: Ignore points with the overlap flag set (LAS V1.4+ format).
+#' @param strata character: "#,#,#,...": Count returns in various height strata. # gives the upper
+#'   limit for each strata. Returns are counted if their height
+#'   is >= the lower limit and < the upper limit. The first strata
+#'   contains points < the first limit. The last strata contains
+#'   points >= the last limit. Default strata: 0.15, 1.37, 5, 10,
+#'   20, 30.
+#' @param intstrata  character: "#, #, #,...": Compute metrics using the intensity values in various
+#'   height strata. Strata for intensity metrics are defined in
+#'   the same way as the /strata option. Default strata: 0.25, 1.37.
+#' @param kde character: "window,mult": Compute the number of modes and minimum and maximum node
+#'   using a kernal density estimator. Window is the width of a
+#'   moving average smoothing window in data units and mult is a
+#'   multiplier for the bandwidth parameter of the KDE. Default
+#'   window is 2.5 and the multiplier is 1.0.
+#' @param rgb  character: "color": Compute intensity metrics using the color value from the RGB
+#'   color for the returns. Valid with LAS version 1.2 and newer
+#'   data files that contain RGB information for each return (point
+#'   record types 2 and 3). Valid color values are R, G, or B.
+#' @param use64bit boolean: indicates 64-bit version of the program
+#'   should be used.
+#' @param runCmd boolean: indicates command line should be executed.
+#' @param saveCmd boolean: indicates command line should be written to a file.
+#' @param cmdFile character: contains the name of the file to which commands
 #'   should be written.
-#' @param cmdClear boolean indicating file for command should be deleted before the command
+#' @param cmdClear boolean: indicates file for command should be deleted before the command
 #'   line is written.
-#' @param echoCmd boolean indicating commadn line should be diasplayed.
-#' @return character string containing the \code{installPath} passed to the function.
+#' @param echoCmd boolean: indicates command line should be displayed.
+#' @return Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
+#'   the (invisible) integer value return from the operating system after running the command.
+#'   if \code{runCmd = FALSE}, return value is the (invisible) command line.
 #' @examples
 #' \dontrun{
 #' CloudMetrics("points/*.las", "test.csv", minht = 2.0)
@@ -515,6 +665,7 @@ CloudMetrics <- function(
   new = FALSE,
   firstinpulse = FALSE,
   firstreturn = FALSE,
+  first = FALSE,
   highpoint = FALSE,
   subset = FALSE,
   id = FALSE,
@@ -545,7 +696,7 @@ CloudMetrics <- function(
   # check for option to run command...if FALSE, check for command file name
   checkRunSaveFile(runCmd, saveCmd, cmdFile)
 
-  # check for folder included in SampleFile...will create if it doesn't exist
+  # check for folder included in output...will create if it doesn't exist
   verifyFolder(dirname(OutputFile))
 
   # if InputSpecifier and OutputFile are different lengths, there are problems
@@ -573,6 +724,7 @@ CloudMetrics <- function(
   options <- addSwitch(options, new)
   options <- addSwitch(options, firstinpulse)
   options <- addSwitch(options, firstreturn)
+  options <- addSwitch(options, first)
   options <- addSwitch(options, highpoint)
   options <- addSwitch(options, subset)
   options <- addSwitch(options, id)
@@ -595,9 +747,222 @@ CloudMetrics <- function(
   required <- addRequired(required, InputSpecifier, TRUE)
   required <- addRequired(required, OutputFile, TRUE)
 
-  if (echoCmd) message(paste(cmd, options, required, "\n"))
+  echoCommand(cmd, options, required, echoCmd)
 
-  dispatchCmd(cmd, options, required, runCmd, saveCmd, cmdClear, cmdFile)
+  ret <- dispatchCommand(cmd, options, required, runCmd, saveCmd, cmdClear, cmdFile)
 
-  invisible(paste(cmd, options, required))
+  if (runCmd) {
+    invisible(ret)
+  } else {
+    invisible(buildCommand(cmd, options, required))
+  }
+}
+
+# GridSurfaceCreate
+# ---------- GridSurfaceCreate
+#
+#' FUSION R command line interface -- Function to create command lines for the GridSurfaceCreate program.
+#'
+#' /code{GridSurfaceCreate} creates command lines for the FUSION GridSurfaceCreate program and optionally executes them.
+#'
+#' @param surfacefile character: Name for output surface file (stored in PLANS DTM format with .dtm extension).
+#' @param cellsize numeric: Desired grid cell size in the same units as LIDAR data.
+#' @param xyunits character: Units for LIDAR data XY (M for meters or F for feet).
+#' @param zunits character: Units for LIDAR data elevations (M for meters or F for feet).
+#' @param coordsys numeric: Coordinate system for LIDAR data:
+#'   0 for unknown
+#'   1 for UTM
+#'   2 for state plane)
+#' @param zone numeric: Coordinate system zone for LIDAR data (0 for unknown).
+#' @param horizdatum numeric: Horizontal datum:
+#'   0 for unknown
+#'   1 for NAD27
+#'   2 for NAD83
+#' @param vertdatum numeric: Vertical datum:
+#'   0 for unknown
+#'   1 for NGVD29
+#'   2 for NAVD88
+#'   3 for GRS80
+#' @param datafile chracter: Name(s) of lidar data files.
+#' @param quiet boolean: Suppress all output during the run.
+#' @param verbose boolean: Display all status information during the run.
+#' @param version boolean: Report version information and exit with no processing.
+#' @param newlog boolean: Erase the existing log file and start a new log
+#' @param log character: Use the name specified for the log file.
+#' @param locale boolean: Adjust program logic to input and output locale-specific numeric
+#'   formats (e.g. use a comma for the decimal separator).
+#' @param nolaszipdll boolean: Suppress the use of the LASzip dll (c) Martin Isenburg...
+#'   removes support for compressed LAS (LAZ) files. This option
+#'   is only useful for programs that read or write point files.
+#' @param median numeric: Apply median filter to model using # by # neighbor window.
+#' @param smooth numeric: Apply mean filter to model using # by # neighbor window.
+#' @param slope numeric: Filter areas from the surface with slope greater than # percent.
+#'   Slope filtering takes place after all other smoothing operations.
+#' @param spike numeric: Filter to remove spikes with slopes greater than # percent.
+#'   Spike filtering takes place after slope filtering.
+#' @param residuals boolean: Compute residual statistics for all points.
+#' @param filldist numeric: Maximum search radius (in cells) used when filling holes in the
+#'   surface. Default is 99 cells.
+#' @param class character: "#,#,#,...": LAS files only: Specifies that only points with classification
+#'   values listed are to be included in the subsample.
+#'   Classification values should be separated by a comma.
+#'   e.g. (2,3,4,5) and can range from 0 to 31.
+#'   If the first character in string is ~, the list is interpreted
+#'   as the classes you DO NOT want included in the subsample.
+#'   e.g. /class:~2,3 would include all class values EXCEPT 2 and 3.
+#' @param ignoreoverlap boolean: Ignore points with the overlap flag set (LAS V1.4+ format).
+#' @param minimum boolean: Use the minimum elevation value in cells to create the surface.
+#' @param maximum boolean: Use the maximum elevation value in cells to create the surface.
+#' @param grid character: "X!,X2,Y1,Y2": Force the origin of the output grid to be (X,Y) instead of
+#'   computing an origin from the data extents and force the grid to
+#'   be W units wide and H units high...W and H will be rounded up to
+#'   a multiple of cellsize.
+#' @param gridxy character: "X!,X2,Y1,Y2": Force the origin of the output grid to be (X1,Y1) instead
+#'   of computing an origin from the data extents and force the grid
+#'   to use (X2,Y2) as the upper right corner of the coverage area.
+#'   The actual upper right corner will be adjusted to be a multiple
+#'   of cellsize.
+#' @param align character: Force the origin and extent of the output grid to match the
+#'   lower left corner and extent of the specified PLANS format DTM file.
+#' @param extent character: Force the origin and extent of the output grid to match the
+#'   lower left corner and extent of the specified PLANS format DTM
+#'   file but adjust the origin to be an even multiple of the cell
+#'   size and the width and height to be multiples of the cell size.
+#' @param smoothfirst boolean: indicating smoothing should occur before median
+#'   filtering. The default is for median filtering to happen before smoothing.
+#' @param use64bit boolean: indicates 64-bit version of the program
+#'   should be used.
+#' @param runCmd boolean: indicates command line should be executed.
+#' @param saveCmd boolean: indicates command line should be written to a file.
+#' @param cmdFile character: contains the name of the file to which commands
+#'   should be written.
+#' @param cmdClear boolean: indicates file for command should be deleted before the command
+#'   line is written.
+#' @param echoCmd boolean: indicates command line should be displayed.
+#' @return Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
+#'   the (invisible) integer value return from the operating system after running the command.
+#'   if \code{runCmd = FALSE}, return value is the (invisible) command line.
+#' @examples
+#' \dontrun{
+#' GridSurfaceCreate("test.dtm", 2.0, "M", "M", 1, 10, 2, 2, "Test/pts.las", class = "2")
+#' }
+#' @export
+GridSurfaceCreate <- function(
+  surfacefile = NULL,
+  cellsize = NULL,
+  xyunits = NULL,
+  zunits = NULL,
+  coordsys = NULL,
+  zone = NULL,
+  horizdatum = NULL,
+  vertdatum = NULL,
+  datafile = NULL,
+  quiet = FALSE,
+  verbose = FALSE,
+  version = FALSE,
+  newlog = FALSE,
+  log = NULL,
+  locale = FALSE,
+  nolaszipdll = FALSE,
+  median = NULL,
+  smooth = NULL,
+  slope = NULL,
+  spike = NULL,
+  residuals = FALSE,
+  filldist = NULL,
+  class = NULL,
+  ignoreoverlap = FALSE,
+  minimum = FALSE,
+  maximum = FALSE,
+  grid = NULL,
+  gridxy = NULL,
+  align = NULL,
+  extent = NULL,
+  smoothfirst = FALSE,
+  use64bit = TRUE,
+  runCmd = TRUE,
+  saveCmd = TRUE,
+  cmdFile = NULL,
+  cmdClear = FALSE,
+  echoCmd = FALSE
+) {
+  # check for required options
+  if (!isOpt(surfacefile)
+      || !isOpt(cellsize)
+      || !isOpt(xyunits)
+      || !isOpt(zunits)
+      || !isOpt(coordsys)
+      || !isOpt(zone)
+      || !isOpt(horizdatum)
+      || !isOpt(vertdatum)
+      || !isOpt(datafile)
+  ) {
+    stop("Missing required parameters: surfacefile, cellsize, xyunits, zunits, coordsys, zone, horizdatum, vertdatum, datafile")
+  }
+
+  # check for option to run command...if FALSE, check for command file name
+  checkRunSaveFile(runCmd, saveCmd, cmdFile)
+
+  # check for folder included in output...will create if it doesn't exist
+  verifyFolder(dirname(surfacefile))
+
+  # build command line
+  cmd <- programName("GridSurfaceCreate", use64bit)
+
+  options <- ""
+  required <- ""
+
+  # deal with switches true/false...
+  # "standard" options
+  options <- addSwitch(options, quiet)
+  options <- addSwitch(options, verbose)
+  options <- addSwitch(options, version)
+  options <- addSwitch(options, newlog)
+  options <- addSwitch(options, locale)
+  options <- addSwitch(options, nolaszipdll)
+  options <- addOption(options, log, TRUE)
+
+  # program-specific options
+  options <- addSwitch(options, residuals)
+  options <- addSwitch(options, ignoreoverlap)
+  options <- addSwitch(options, minimum)
+  options <- addSwitch(options, maximum)
+
+  # deal with options...
+  # program-specific options
+  if (smoothfirst)
+    options <- addOption(options, smooth)
+
+  options <- addOption(options, median)
+  if (!smoothfirst)
+    options <- addOption(options, smooth)
+  options <- addOption(options, slope)
+  options <- addOption(options, spike)
+  options <- addOption(options, filldist)
+  options <- addOption(options, class)
+  options <- addOption(options, grid)
+  options <- addOption(options, gridxy)
+  options <- addOption(options, align)
+  options <- addOption(options, extent)
+
+  # deal with required parameters...some may have defaults
+  required <- addRequired(required, surfacefile, TRUE)
+  required <- addRequired(required, cellsize)
+  required <- addRequired(required, xyunits)
+  required <- addRequired(required, zunits)
+  required <- addRequired(required, coordsys)
+  required <- addRequired(required, zone)
+  required <- addRequired(required, horizdatum)
+  required <- addRequired(required, vertdatum)
+  required <- addRequired(required, datafile, TRUE)
+
+  echoCommand(cmd, options, required, echoCmd)
+
+  ret <- dispatchCommand(cmd, options, required, runCmd, saveCmd, cmdClear, cmdFile)
+
+  if (runCmd) {
+    invisible(ret)
+  } else {
+    invisible(buildCommand(cmd, options, required))
+  }
 }

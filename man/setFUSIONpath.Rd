@@ -20,7 +20,6 @@ to the PATH environment variable.
 }
 \examples{
 \dontrun{
-dispatchCmd("ClipData", "/minht:2.0", "*.las clip1.las", runCmd = TRUE)
-dispatchCmd("ClipData", "/minht:2.0", "*.las clip1.las", runCmd = FALSE, cmdClear = TRUE, cmdFile = "test.bat")
+setFUSIONpath("C:/FUSION/")
 }
 }
