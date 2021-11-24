@@ -304,7 +304,7 @@ buildCommand <- function(cmd, options, required) {
 #
 #' FUSION R command line interface -- Set a package environment variable containing the FUSION install folder.
 #'
-#' /code{setFUSIONpath} sets an environment variable local to the \code{fusionwrapr} package that specifys
+#' /code{setFUSIONpath} sets an environment variable local to the \code{fusionwrapr} package that specifies
 #' the install folder for FUSION. This is necessary when the FUSION install folder has not been added
 #' to the PATH environment variable.
 #'
@@ -326,6 +326,73 @@ setFUSIONpath <- function(installPath) {
   }
 
   invisible(fusionrEnv$installPath)
+}
+
+# ---------- addToCommandFile
+#
+#' FUSION R command line interface -- Write comments or other lines to command file
+#'
+#' /code{addToCommandFile} writes lines to a command file (batch file). The normal behavior is to write comments
+#' but with \code{comment=FALSE}, you can write commands.
+#'
+#' @param line character: line to be written to the command file.
+#' @param cmdFile character: contains the name of the file to which commands
+#'   should be written.
+#' @param cmdClear boolean: indicates file for command should be deleted before the command
+#'   line is written. Use this option with caution as it will wipe out the content of the
+#'   command file.
+#' @param comment boolean: \code{line} is preceeded by "REM" when TRUE, otherwise not.
+#' @return invisible boolean indicating success or failure
+#' @examples
+#' \dontrun{
+#' addToCommandFile("This is a comment!!", "Test/test.bat")
+#' }
+#' @export
+addToCommandFile <- function(
+  line = "",
+  cmdFile = NULL,
+  cmdClear = FALSE,
+  comment = TRUE
+) {
+  if (isOpt(cmdFile)) {
+    if (cmdClear) unlink(cmdFile)
+
+    if (comment) {
+      cat(paste0("REM ", line, "\n"), file = cmdFile, append = TRUE)
+    } else {
+      cat(paste0(line, "\n"), file = cmdFile, append = TRUE)
+    }
+    invisible(TRUE)
+  }
+
+  invisible(FALSE)
+}
+
+# ---------- runCommandFile
+#
+#' FUSION R command line interface -- Run a command file
+#'
+#' /code{runCommandFile} runs a command file.
+#'
+#' @param cmdFile character: contains the name of the file to be run.
+#' @param ... additional parameter passed to system2().
+#' @return invisible boolean indicating success or failure for the initiation of the run.
+#' @examples
+#' \dontrun{
+#' runCommandFile("Test/test.bat")
+#' }
+#' @export
+runCommandFile <- function(
+  cmdFile = NULL,
+  ...
+) {
+  if (isOpt(cmdFile)) {
+    system2(cmdFile, ...)
+
+    invisible(TRUE)
+  }
+
+  invisible(FALSE)
 }
 
 # *****************************************************************************
