@@ -17,7 +17,7 @@ buildCommand(cmd, options, required)
 invisible string containing complete command line
 }
 \description{
-This is a helper function used in the fusionr package to construct the command line.
+This is a helper function used in the fusionwrapr package to construct the command line.
 }
 \examples{
 \dontrun{

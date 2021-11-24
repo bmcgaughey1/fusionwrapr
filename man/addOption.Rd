@@ -18,7 +18,7 @@ value are used when constructing the option text.}
 A (invisible) string containing the modified \code{cl} string.
 }
 \description{
-This is a helper function used in the fusionr package to build the text string
+This is a helper function used in the fusionwrapr package to build the text string
 for command line options that require parameters. The resulting string is appended
 to \code{cl}.
 }

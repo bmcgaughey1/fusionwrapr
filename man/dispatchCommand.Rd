@@ -33,7 +33,7 @@ A single integer value or vector of integers. If \code{required} is a vector of
   string and \code{runCmd = FALSE} and \code{saveaCmd = TRUE}, the return value is 0.
 }
 \description{
-This is a helper function used in the fusionr package to either execute command lines or
+This is a helper function used in the fusionwrapr package to either execute command lines or
 write them to a file.
 }
 \examples{

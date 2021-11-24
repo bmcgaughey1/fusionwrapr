@@ -18,7 +18,7 @@ should be written.}
 An (invisible) boolean TRUE, If the options are inconsistent, execution stops.
 }
 \description{
-This is a helper function used in the fusionr package to verify the combination
+This is a helper function used in the fusionwrapr package to verify the combination
 of the runCmd, saveCmd, and cmdFile options for functions that build command line.
 }
 \examples{

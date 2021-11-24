@@ -19,7 +19,7 @@ echoCommand(cmd, options, required, echoCmd)
 boolean TRUE
 }
 \description{
-This is a helper function used in the fusionr package to construct and echo the command
+This is a helper function used in the fusionwrapr package to construct and echo the command
 line (depending of value of echoCmd parameter).
 }
 \examples{

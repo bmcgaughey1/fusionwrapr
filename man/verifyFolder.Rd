@@ -14,7 +14,7 @@ An (invisible) boolean TRUE, If the folder does not exist and cannot
   be created, execution stops.
 }
 \description{
-This is a helper function used in the fusionr package to verify
+This is a helper function used in the fusionwrapr package to verify
 the existence of a folder and create the folder if it does not exist.
 verifyFolder is normally called with a folder extracted using
 \code{dirname()} when an output file is needed for a function.

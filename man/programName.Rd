@@ -10,13 +10,14 @@ programName(name, use64bit = FALSE)
 \item{name}{character string with the base program name.}
 
 \item{use64bit}{boolean value indicating 64-bit version of the program
-specified in \code{name} should be used.}
+specified in \code{name} should be used. If \code{setFUSIONpath} has
+been called,}
 }
 \value{
 A (invisible) string containing the program name.
 }
 \description{
-This is a helper function used in the fusionr package to build the text string
+This is a helper function used in the fusionwrapr package to build the text string
 for the program name. It uses the \code{use64bit} parameter to control use of
 64-bit versions of command line programs and will include the FUSION install
 path if it has been provided using \code{setFUSIONpath()}.

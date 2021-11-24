@@ -1,12 +1,12 @@
-Package: fusionr
+Package: fusionwrapr
 Type: Package
 Title: R Interface to FUSION-LTK Command Line Programs
 Version: 0.1.0
 Authors@R: person("Robert", "McGaughey", email = "robert.mcgaughey@usda.gov", role = c("aut", "cre"))
 Maintainer: The package maintainer <bmcgaughey1@gmail.com>
-Description: fusionr provides R functions that construct command lines
+Description: fusionwrapr provides R functions that construct command lines
     for many of the FUSION command line programs. FUSION is only available
-    on Windows platforms, hence fusionr is only operable on Windows
+    on Windows platforms, hence fusionwrapr is only operable on Windows
     platforms.
 License: CC0
 Encoding: UTF-8

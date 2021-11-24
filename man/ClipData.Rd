@@ -5,12 +5,12 @@
 \title{FUSION R command line interface -- Function to create command lines for the ClipData program.}
 \usage{
 ClipData(
-  InputSpecifier = NULL,
-  SampleFile = NULL,
-  MinX = "-1000000000",
-  MinY = "-1000000000",
-  MaxX = "1000000000",
-  MaxY = "1000000000",
+  inputspecifier = NULL,
+  samplefile = NULL,
+  minx = "-1000000000",
+  miny = "-1000000000",
+  maxx = "1000000000",
+  maxy = "1000000000",
   quiet = FALSE,
   verbose = FALSE,
   version = FALSE,
@@ -50,24 +50,24 @@ ClipData(
 )
 }
 \arguments{
-\item{InputSpecifier}{character: LIDAR data file template, name of a text file containing
+\item{inputspecifier}{character: LIDAR data file template, name of a text file containing
 a list of file names (must have .txt extension), or a
 FUSION catalog file.}
 
-\item{SampleFile}{character: Name for subsample file (extension will be added) or a
+\item{samplefile}{character: Name for subsample file (extension will be added) or a
 text file containing sample information for 1 or more samples.
 Each line in the text file should have the output filename
 and the MinX MinY MaxX MaxY values for the sample area separated
 by spaces or commas. The output filename cannot contain spaces.
 To save compressed LAS files, specify the .laz extension.}
 
-\item{MinX}{numeric: X for lower left corner of the sample area bounding box.}
+\item{minx}{numeric: X for lower left corner of the sample area bounding box.}
 
-\item{MinY}{numeric: Y for lower left corner of the sample area bounding box.}
+\item{miny}{numeric: Y for lower left corner of the sample area bounding box.}
 
-\item{MaxX}{numeric: X for upper right corner of the sample area bounding box.}
+\item{maxx}{numeric: X for upper right corner of the sample area bounding box.}
 
-\item{MaxY}{numeric: Y for upper right corner of the sample area bounding box.}
+\item{maxy}{numeric: Y for upper right corner of the sample area bounding box.}
 
 \item{quiet}{boolean: Suppress all output during the run.}
 

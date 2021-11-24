@@ -14,6 +14,6 @@ A (invisible) boolean value, TRUE indicates the object value is not NULL,
   FALSE indicates the object value is NULL.
 }
 \description{
-This is a helper function used in the fusionr package to test the
+This is a helper function used in the fusionwrapr package to test the
 value of an object: usually a function parameter.
 }

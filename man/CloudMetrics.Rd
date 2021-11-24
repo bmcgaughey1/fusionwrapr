@@ -5,8 +5,8 @@
 \title{FUSION R command line interface -- Function to create command lines for the CloudMetrics program.}
 \usage{
 CloudMetrics(
-  InputSpecifier = NULL,
-  OutputFile = NULL,
+  inputspecifier = NULL,
+  outputfile = NULL,
   quiet = FALSE,
   verbose = FALSE,
   version = FALSE,
@@ -41,10 +41,10 @@ CloudMetrics(
 )
 }
 \arguments{
-\item{InputSpecifier}{character: LIDAR data file template, name of text file containing a
+\item{inputspecifier}{character: LIDAR data file template, name of text file containing a
 list of file names (must have .txt extension), or a catalog file.}
 
-\item{OutputFile}{character: Name for output file to contain cloud metrics (usually .csv extension).}
+\item{outputfile}{character: Name for output file to contain cloud metrics (usually .csv extension).}
 
 \item{quiet}{boolean: Suppress all output during the run.}
 
