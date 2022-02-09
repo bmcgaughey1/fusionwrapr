@@ -203,6 +203,6 @@ Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
 }
 \examples{
 \dontrun{
-GridSurfaceCreate("test.dtm", 2.0, "M", "M", 1, 10, 2, 2, "Test/pts.las", class = "2")
+CanopyModel("test.dtm", 2.0, "M", "M", 1, 10, 2, 2, "Test/pts.las")
 }
 }
