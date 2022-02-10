@@ -11,7 +11,7 @@ programName(name, use64bit = FALSE)
 
 \item{use64bit}{boolean value indicating 64-bit version of the program
 specified in \code{name} should be used. If \code{setFUSIONpath} has
-been called,}
+been called, the path is added to the return string.}
 }
 \value{
 A (invisible) string containing the program name.

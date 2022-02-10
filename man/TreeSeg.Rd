@@ -29,7 +29,7 @@ TreeSeg(
   shape = FALSE,
   cleantile = FALSE,
   htmultiplier = NULL,
-  projection = FALSE,
+  projection = NULL,
   use64bit = TRUE,
   runCmd = TRUE,
   saveCmd = TRUE,
@@ -103,7 +103,7 @@ not used. Used only with the /points option.}
 
 \item{clipfolder}{character: folder name where point files for individual clips are stored. Used
 only with the /points option. If not specified, point files are stored in the same folder with
-other outputs. The folder name must end with a trailing backslash and must already exist.}
+other outputs. If the folder does not exist, it will be created.}
 
 \item{shape}{boolean: Create a shapefile containing the high points and basin metrics.}
 
@@ -140,7 +140,7 @@ Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
   if \code{runCmd = FALSE}, return value is the (invisible) command line.
 }
 \description{
-/code{CanopyModel} creates command lines for the FUSION TreeSeg program and optionally executes them.
+\code{CanopyModel} creates command lines for the FUSION TreeSeg program and optionally executes them.
 }
 \examples{
 \dontrun{

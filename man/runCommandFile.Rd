@@ -15,7 +15,7 @@ runCommandFile(cmdFile = NULL, ...)
 invisible boolean indicating success or failure for the initiation of the run.
 }
 \description{
-/code{runCommandFile} runs a command file.
+\code{runCommandFile} runs a command file.
 }
 \examples{
 \dontrun{

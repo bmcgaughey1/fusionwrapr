@@ -4,10 +4,17 @@
 \alias{addToCommandFile}
 \title{FUSION R command line interface -- Write comments or other lines to command file}
 \usage{
-addToCommandFile(line = "", cmdFile = NULL, cmdClear = FALSE, comment = TRUE)
+addToCommandFile(
+  line = "",
+  cmdFile = NULL,
+  cmdClear = FALSE,
+  comment = TRUE,
+  addLine = TRUE
+)
 }
 \arguments{
-\item{line}{character: line to be written to the command file.}
+\item{line}{character: line to be written to the command file. You can start or end \code{line}
+with newline characters to add blank lines.}
 
 \item{cmdFile}{character: contains the name of the file to which commands
 should be written.}
@@ -16,13 +23,15 @@ should be written.}
 line is written. Use this option with caution as it will wipe out the content of the
 command file.}
 
-\item{comment}{boolean: \code{line} is preceeded by "REM" when TRUE, otherwise not.}
+\item{comment}{boolean: \code{line} is preceded by "REM" when TRUE, otherwise not.}
+
+\item{addLine}{boolean: if TRUE, a blank line is added to the command file before writing \code{line}.}
 }
 \value{
 invisible boolean indicating success or failure
 }
 \description{
-/code{addToCommandFile} writes lines to a command file (batch file). The normal behavior is to write comments
+\code{addToCommandFile} writes lines to a command file (batch file). The normal behavior is to write comments
 but with \code{comment=FALSE}, you can write commands.
 }
 \examples{

@@ -186,7 +186,7 @@ Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
   if \code{runCmd = FALSE}, return value is the (invisible) command line.
 }
 \description{
-/code{ClipData} creates command lines for the FUSION ClipData program and optionally executes them.
+\code{ClipData} creates command lines for the FUSION ClipData program and optionally executes them.
 }
 \examples{
 \dontrun{

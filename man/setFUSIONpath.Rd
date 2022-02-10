@@ -14,7 +14,7 @@ slash will be added if not included.}
 character string containing the \code{installPath} passed to the function.
 }
 \description{
-/code{setFUSIONpath} sets an environment variable local to the \code{fusionwrapr} package that specifies
+\code{setFUSIONpath} sets an environment variable local to the \code{fusionwrapr} package that specifies
 the install folder for FUSION. This is necessary when the FUSION install folder has not been added
 to the PATH environment variable.
 }

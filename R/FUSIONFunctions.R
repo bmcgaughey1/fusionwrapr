@@ -3,13 +3,13 @@
 # found an rFUSION package https://cran.r-project.org/web/packages/rFUSION/index.html but not many functions
 # and it doesn't look very robust
 #
-# thinking about this as a package but not sure I want to add all programs.
-# as a package, there could be global options for FUSION install folder, runCmd, saveCmd, and cmdFile that would
-# override options for specific calls to build and execute command lines.
-# this would also require functions to write comments to command file (preceded by a blank line),
-# clear the command  file, and (probably) run the command file
-
-
+# I'm not sure I want to add all programs but I am starting with things I use most often and that I think will be
+# most useful. It takes about 30 minutes to add a new function (representing a single program). There are about 45
+# programs...do the math!
+#
+# It might be really helpful if I could write functions to read/write DTM format files
+#
+#
 # Some useful keyboard shortcuts for package authoring:
 #
 #   Install Package:           Ctrl + Shift + B
@@ -27,10 +27,14 @@
 # set up local environment to hold global variables
 fusionrEnv <- new.env(parent = emptyenv())
 
-fusionrEnv$runCmd <- FALSE
+fusionrEnv$use64bit <- TRUE
+fusionrEnv$runCmd <- TRUE
 fusionrEnv$saveCmd <- TRUE
 fusionrEnv$cmdFile <- NULL
+fusionrEnv$echoCmd <- FALSE
 fusionrEnv$installPath <- ""
+
+fusionrEnv$areSet <- FALSE
 
 # accessory functions
 
@@ -70,7 +74,9 @@ verifyFolder <- function(folder) {
 #' FUSION R command line interface -- test if object is NULL
 #'
 #' This is a helper function used in the fusionwrapr package to test the
-#' value of an object: usually a function parameter.
+#' value of an object: usually a function parameter. While this simply
+#' wraps \code{is.null()}, it makes for slightly more readable code in the
+#' functions that build command lines.
 #'
 #' @param x object
 #' @return A (invisible) boolean value, TRUE indicates the object value is not NULL,
@@ -163,7 +169,7 @@ addRequired <- function(cl, req, quote = FALSE) {
 #' @param name character string with the base program name.
 #' @param use64bit boolean value indicating 64-bit version of the program
 #'   specified in \code{name} should be used. If \code{setFUSIONpath} has
-#'   been called,
+#'   been called, the path is added to the return string.
 #' @return A (invisible) string containing the program name.
 #' @examples
 #' \dontrun{
@@ -250,6 +256,8 @@ dispatchCommand <- function(cmd, options, required, runCmd, saveCmd, cmdClear, c
         ret <- system2(cmd, paste(options, x))
       } else {
         if (saveCmd) {
+          if (is.null(cmdFile)) stop("Missing command file name!!")
+
           if (cmdClear) unlink(cmdFile)
           cat(paste0(buildCommand(cmd, options, x), "\n"), file = cmdFile, append = TRUE)
         }
@@ -304,7 +312,7 @@ buildCommand <- function(cmd, options, required) {
 #
 #' FUSION R command line interface -- Set a package environment variable containing the FUSION install folder.
 #'
-#' /code{setFUSIONpath} sets an environment variable local to the \code{fusionwrapr} package that specifies
+#' \code{setFUSIONpath} sets an environment variable local to the \code{fusionwrapr} package that specifies
 #' the install folder for FUSION. This is necessary when the FUSION install folder has not been added
 #' to the PATH environment variable.
 #'
@@ -328,20 +336,89 @@ setFUSIONpath <- function(installPath) {
   invisible(fusionrEnv$installPath)
 }
 
+## ---------- setGlobalCommandOptions
+#
+#' FUSION R command line interface -- Set global options to control the dispatch of commands.
+#'
+#' \code{setGlobalCommandOptions} sets environment variables local to the \code{fusionwrapr} package that control
+#' how individual commands are handled. Use of \code{setGlobalCommandOptions} can simplify testing of commands and
+#' the creation of batch files.
+#'
+#' Default behavior for dispatching commands is use the 64-bit version of programs (if available) and run the
+#' commands without echoing them to the console.
+#'
+#' @param use64bit boolean: indicates 64-bit version of the program should be used.
+#' @param runCmd boolean: indicates command line should be executed.
+#' @param saveCmd boolean: indicates command line should be written to a file. If this is \code{TRUE}, you
+#'   must also set \code{cmdFile} either in the global options or in individual command function calls.
+#' @param cmdFile character: contains the name of the file to which commands should be written.
+#' @param cmdClear boolean: indicates file for command should be deleted before the command line is written.
+#' @param echoCmd boolean: indicates command line should be displayed.
+#' @return boolean TRUE
+#' @examples
+#' setGlobalCommandOptions(runCmd = FALSE)
+#' @export
+setGlobalCommandOptions <- function(
+  use64bit = NULL,
+  runCmd = NULL,
+  saveCmd = NULL,
+  cmdFile = NULL,
+  echoCmd = NULL
+) {
+  # only set variables that are passed to the function
+  if (isOpt(use64bit)) fusionrEnv$use64bit <- use64bit
+  if (isOpt(runCmd)) fusionrEnv$runCmd <- runCmd
+  if (isOpt(saveCmd)) fusionrEnv$saveCmd <- saveCmd
+  if (isOpt(cmdFile)) fusionrEnv$cmdFile <- cmdFile
+  if (isOpt(echoCmd)) fusionrEnv$echoCmd <- echoCmd
+
+  fusionrEnv$areSet <- TRUE
+
+  invisible(TRUE)
+}
+
+## ---------- resetGlobalCommandOptions
+#
+#' FUSION R command line interface -- reset global options to control the dispatch of commands.
+#'
+#' \code{resetGlobalCommandOptions} sets environment variables local to the \code{fusionwrapr} package that control
+#' how individual commands are handled to their default values.
+#'
+#' Default behavior for dispatching commands is use the 64-bit version of programs (if available) and run the
+#' commands without echoing them to the console.
+#'
+#' @return boolean TRUE
+#' @examples
+#' resetGlobalCommandOptions()
+#' @export
+resetGlobalCommandOptions <- function() {
+  fusionrEnv$use64bit <- TRUE
+  fusionrEnv$runCmd <- TRUE
+  fusionrEnv$saveCmd <- TRUE
+  fusionrEnv$cmdFile <- NULL
+  fusionrEnv$echoCmd <- FALSE
+
+  fusionrEnv$areSet <- FALSE
+
+  invisible(TRUE)
+}
+
 # ---------- addToCommandFile
 #
 #' FUSION R command line interface -- Write comments or other lines to command file
 #'
-#' /code{addToCommandFile} writes lines to a command file (batch file). The normal behavior is to write comments
+#' \code{addToCommandFile} writes lines to a command file (batch file). The normal behavior is to write comments
 #' but with \code{comment=FALSE}, you can write commands.
 #'
-#' @param line character: line to be written to the command file.
+#' @param line character: line to be written to the command file. You can start or end \code{line}
+#'   with newline characters to add blank lines.
 #' @param cmdFile character: contains the name of the file to which commands
 #'   should be written.
 #' @param cmdClear boolean: indicates file for command should be deleted before the command
 #'   line is written. Use this option with caution as it will wipe out the content of the
 #'   command file.
-#' @param comment boolean: \code{line} is preceeded by "REM" when TRUE, otherwise not.
+#' @param comment boolean: \code{line} is preceded by "REM" when TRUE, otherwise not.
+#' @param addLine boolean: if TRUE, a blank line is added to the command file before writing \code{line}.
 #' @return invisible boolean indicating success or failure
 #' @examples
 #' \dontrun{
@@ -352,10 +429,15 @@ addToCommandFile <- function(
   line = "",
   cmdFile = NULL,
   cmdClear = FALSE,
-  comment = TRUE
+  comment = TRUE,
+  addLine = TRUE
 ) {
   if (isOpt(cmdFile)) {
     if (cmdClear) unlink(cmdFile)
+
+    if (addLine) {
+      cat("\n", file = cmdFile, append = TRUE)
+    }
 
     if (comment) {
       cat(paste0("REM ", line, "\n"), file = cmdFile, append = TRUE)
@@ -368,11 +450,66 @@ addToCommandFile <- function(
   invisible(FALSE)
 }
 
+# ---------- useLogFile
+#
+#' FUSION R command line interface -- Write comments or other lines to command file
+#'
+#' \code{useLogFile} writes code to a command file (batch file) to set the log
+#' file for FUSION tools. The normal behavior is to write output to a log file in the
+#' FUSION install folder (LTKmaster.log).
+#'
+#' Note that the \code{logFile} can contain spaces (the folder name, file name, or both).
+#' However, using spaces is not recommended and may cause problems. If you include a folder
+#' name, use the backslash character as the path separator.
+#'
+#' @param logFile character: Name of the log file.
+#' @param cmdFile character: contains the name of the file to which commands
+#'   should be written.
+#' @param logClear boolean: add a line to the command file to delete the \code{logFile} before
+#'   setting the environment variable for the log file.
+#' @param cmdClear boolean: indicates file for command should be deleted before the command
+#'   line is written. Use this option with caution as it will wipe out the content of the
+#'   command file.
+#' @return invisible boolean indicating success or failure
+#' @examples
+#' \dontrun{
+#' useLogFile("NewLog.log", "test.bat", logClear = TRUE)
+#' }
+#' @export
+useLogFile <- function(
+  logFile = NULL,
+  cmdFile = NULL,
+  logClear = FALSE,
+  cmdClear = FALSE
+) {
+  # check for options
+  if (!isOpt(logFile)
+      || !isOpt(cmdFile)) {
+    invisible(FALSE)
+  }
+
+  # add a comment...this will also handle clearing the command file if needed
+  addToCommandFile(paste0("Redirecting log output to: ", logFile)
+                   , cmdFile = cmdFile
+                   , cmdClear = cmdClear
+                   , comment = TRUE
+  )
+
+  if (logClear) {
+    addToCommandFile(paste0("DEL ", logFile), cmdFile = cmdFile, comment = FALSE)
+  }
+
+  # write command to set environment variable
+  addToCommandFile(paste0("SET LTKLOG=", logFile), cmdFile = cmdFile, comment = FALSE)
+
+  invisible(TRUE)
+}
+
 # ---------- runCommandFile
 #
 #' FUSION R command line interface -- Run a command file
 #'
-#' /code{runCommandFile} runs a command file.
+#' \code{runCommandFile} runs a command file.
 #'
 #' @param cmdFile character: contains the name of the file to be run.
 #' @param ... additional parameter passed to system2().
@@ -402,7 +539,7 @@ runCommandFile <- function(
 #
 #' FUSION R command line interface -- Super-function to clip data for plots using the ClipData program.
 #'
-#' /code{ClipPlot} creates command lines for the FUSION ClipData program and optionally executes them.
+#' \code{ClipPlot} creates command lines for the FUSION ClipData program and optionally executes them.
 #' Command lines are designed to clip a circular or square area centered in the \code{(x,y)}.
 #'
 #' @param inputspecifier character: LIDAR data file template, name of a text file containing
@@ -463,7 +600,7 @@ ClipPlot <- function(
 #
 #' FUSION R command line interface -- Function to create command lines for the ClipData program.
 #'
-#' /code{ClipData} creates command lines for the FUSION ClipData program and optionally executes them.
+#' \code{ClipData} creates command lines for the FUSION ClipData program and optionally executes them.
 #'
 #' @param inputspecifier character: LIDAR data file template, name of a text file containing
 #'   a list of file names (must have .txt extension), or a
@@ -612,6 +749,16 @@ ClipData <- function(
     stop("Missing required parameters: inputspecifier, samplefile")
   }
 
+  # use the global variables to set command dispatch options...global options
+  # are only used if the corresponding option was not passed to the function
+  if (fusionrEnv$areSet) {
+    if (missing(use64bit)) use64bit <- fusionrEnv$use64bit
+    if (missing(runCmd)) runCmd <- fusionrEnv$runCmd
+    if (missing(saveCmd)) saveCmd <- fusionrEnv$saveCmd
+    if (missing(cmdFile)) cmdFile <- fusionrEnv$cmdFile
+    if (missing(echoCmd)) echoCmd <- fusionrEnv$echoCmd
+  }
+
   # check for option to run command...if FALSE, check for command file name
   checkRunSaveFile(runCmd, saveCmd, cmdFile)
 
@@ -705,7 +852,7 @@ ClipData <- function(
 #
 #' FUSION R command line interface -- Function to create command lines for the CloudMetrics program.
 #'
-#' /code{CloudMetrics} creates command lines for the FUSION CloudMetrics program and optionally executes them.
+#' \code{CloudMetrics} creates command lines for the FUSION CloudMetrics program and optionally executes them.
 #'
 #' @param inputspecifier  character: LIDAR data file template, name of text file containing a
 #'   list of file names (must have .txt extension), or a catalog file.
@@ -837,6 +984,16 @@ CloudMetrics <- function(
     stop("Missing required parameters: inputspecifier, outputfile")
   }
 
+  # use the global variables to set command dispatch options...global options
+  # are only used if the corresponding option was not passed to the function
+  if (fusionrEnv$areSet) {
+    if (missing(use64bit)) use64bit <- fusionrEnv$use64bit
+    if (missing(runCmd)) runCmd <- fusionrEnv$runCmd
+    if (missing(saveCmd)) saveCmd <- fusionrEnv$saveCmd
+    if (missing(cmdFile)) cmdFile <- fusionrEnv$cmdFile
+    if (missing(echoCmd)) echoCmd <- fusionrEnv$echoCmd
+  }
+
   # check for option to run command...if FALSE, check for command file name
   checkRunSaveFile(runCmd, saveCmd, cmdFile)
 
@@ -907,7 +1064,7 @@ CloudMetrics <- function(
 #
 #' FUSION R command line interface -- Function to create command lines for the GridSurfaceCreate program.
 #'
-#' /code{GridSurfaceCreate} creates command lines for the FUSION GridSurfaceCreate program and optionally executes them.
+#' \code{GridSurfaceCreate} creates command lines for the FUSION GridSurfaceCreate program and optionally executes them.
 #'
 #' @param surfacefile character: Name for output surface file (stored in PLANS DTM format with .dtm extension).
 #' @param cellsize numeric: Desired grid cell size in the same units as LIDAR data.
@@ -1044,6 +1201,16 @@ GridSurfaceCreate <- function(
     stop("Missing required parameters: surfacefile, cellsize, xyunits, zunits, coordsys, zone, horizdatum, vertdatum, datafile")
   }
 
+  # use the global variables to set command dispatch options...global options
+  # are only used if the corresponding option was not passed to the function
+  if (fusionrEnv$areSet) {
+    if (missing(use64bit)) use64bit <- fusionrEnv$use64bit
+    if (missing(runCmd)) runCmd <- fusionrEnv$runCmd
+    if (missing(saveCmd)) saveCmd <- fusionrEnv$saveCmd
+    if (missing(cmdFile)) cmdFile <- fusionrEnv$cmdFile
+    if (missing(echoCmd)) echoCmd <- fusionrEnv$echoCmd
+  }
+
   # check for option to run command...if FALSE, check for command file name
   checkRunSaveFile(runCmd, saveCmd, cmdFile)
 
@@ -1116,7 +1283,7 @@ GridSurfaceCreate <- function(
 #
 #' FUSION R command line interface -- Function to create command lines for the GridMetrics program.
 #'
-#' /code{GridMetrics} creates command lines for the FUSION GridMetrics program and optionally executes them.
+#' \code{GridMetrics} creates command lines for the FUSION GridMetrics program and optionally executes them.
 #'
 #' @param groundfile  character: Name for ground surface model (PLANS DTM with .dtm extension).
 #'   May be wildcard or text list file (extension .txt only).
@@ -1303,6 +1470,16 @@ GridMetrics <- function(
     stop("Missing required parameters: groundfile, heightbreak, cellsize, outputfile, datafile")
   }
 
+  # use the global variables to set command dispatch options...global options
+  # are only used if the corresponding option was not passed to the function
+  if (fusionrEnv$areSet) {
+    if (missing(use64bit)) use64bit <- fusionrEnv$use64bit
+    if (missing(runCmd)) runCmd <- fusionrEnv$runCmd
+    if (missing(saveCmd)) saveCmd <- fusionrEnv$saveCmd
+    if (missing(cmdFile)) cmdFile <- fusionrEnv$cmdFile
+    if (missing(echoCmd)) echoCmd <- fusionrEnv$echoCmd
+  }
+
   # check for option to run command...if FALSE, check for command file name
   checkRunSaveFile(runCmd, saveCmd, cmdFile)
 
@@ -1378,7 +1555,7 @@ GridMetrics <- function(
 #
 #' FUSION R command line interface -- Function to create command lines for the CanopyModel program.
 #'
-#' /code{CanopyModel} creates command lines for the FUSION CanopyModel program and optionally executes them.
+#' \code{CanopyModel} creates command lines for the FUSION CanopyModel program and optionally executes them.
 #'
 #' @param surfacefile character: Name for output surface file (stored in PLANS DTM format with .dtm extension).
 #' @param cellsize numeric: Desired grid cell size in the same units as LIDAR data.
@@ -1544,6 +1721,16 @@ CanopyModel <- function(
     stop("Missing required parameters: surfacefile, cellsize, xyunits, zunits, coordsys, zone, horizdatum, vertdatum, datafile")
   }
 
+  # use the global variables to set command dispatch options...global options
+  # are only used if the corresponding option was not passed to the function
+  if (fusionrEnv$areSet) {
+    if (missing(use64bit)) use64bit <- fusionrEnv$use64bit
+    if (missing(runCmd)) runCmd <- fusionrEnv$runCmd
+    if (missing(saveCmd)) saveCmd <- fusionrEnv$saveCmd
+    if (missing(cmdFile)) cmdFile <- fusionrEnv$cmdFile
+    if (missing(echoCmd)) echoCmd <- fusionrEnv$echoCmd
+  }
+
   # check for option to run command...if FALSE, check for command file name
   checkRunSaveFile(runCmd, saveCmd, cmdFile)
 
@@ -1624,7 +1811,7 @@ CanopyModel <- function(
 #
 #' FUSION R command line interface -- Function to create command lines for the TreeSeg program.
 #'
-#' /code{CanopyModel} creates command lines for the FUSION TreeSeg program and optionally executes them.
+#' \code{CanopyModel} creates command lines for the FUSION TreeSeg program and optionally executes them.
 #'
 #' @param CHM character: Name for canopy height model (PLANS DTM with .dtm extension).
 #'   May be wildcard or text list file (extension .txt only). This can be a canopy surface
@@ -1671,7 +1858,7 @@ CanopyModel <- function(
 #' @param aspect boolean: Calculate surface aspect.
 #' @param clipfolder character: folder name where point files for individual clips are stored. Used
 #'   only with the /points option. If not specified, point files are stored in the same folder with
-#'   other outputs. The folder name must end with a trailing backslash and must already exist.
+#'   other outputs. If the folder does not exist, it will be created.
 #' @param shape boolean: Create a shapefile containing the high points and basin metrics.
 #' @param cleantile boolean: Output an ASCII raster map that only includes basins within the
 #'   reporting extent defined by the /grid, /gridxy, and /align options.
@@ -1722,7 +1909,7 @@ TreeSeg <- function(
   shape = FALSE,
   cleantile = FALSE,
   htmultiplier = NULL,
-  projection = FALSE,
+  projection = NULL,
   use64bit = TRUE,
   runCmd = TRUE,
   saveCmd = TRUE,
@@ -1738,6 +1925,16 @@ TreeSeg <- function(
     stop("Missing required parameters: CHM, ht_threshold, outputfile")
   }
 
+  # use the global variables to set command dispatch options...global options
+  # are only used if the corresponding option was not passed to the function
+  if (fusionrEnv$areSet) {
+    if (missing(use64bit)) use64bit <- fusionrEnv$use64bit
+    if (missing(runCmd)) runCmd <- fusionrEnv$runCmd
+    if (missing(saveCmd)) saveCmd <- fusionrEnv$saveCmd
+    if (missing(cmdFile)) cmdFile <- fusionrEnv$cmdFile
+    if (missing(echoCmd)) echoCmd <- fusionrEnv$echoCmd
+  }
+
   # check for option to run command...if FALSE, check for command file name
   checkRunSaveFile(runCmd, saveCmd, cmdFile)
 
@@ -1745,7 +1942,14 @@ TreeSeg <- function(
   verifyFolder(dirname(outputfile))
 
   # check for folder for tree clips...will create if it doesn't exist
-  verifyFolder(dirname(clipfolder))
+  # don't call dirname() because it will strip off the last folder in the path
+  if (isOpt(clipfolder)) {
+    # make sure there is a trailing slash
+    if (!endsWith(clipfolder, "/"))
+      clipfolder <- paste0(clipfolder, "/")
+
+    verifyFolder(clipfolder)
+  }
 
   # build command line
   cmd <- programName("TreeSeg", use64bit)

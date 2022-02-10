@@ -15,5 +15,7 @@ A (invisible) boolean value, TRUE indicates the object value is not NULL,
 }
 \description{
 This is a helper function used in the fusionwrapr package to test the
-value of an object: usually a function parameter.
+value of an object: usually a function parameter. While this simply
+wraps \code{is.null()}, it makes for slightly more readable code in the
+functions that build command lines.
 }

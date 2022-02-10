@@ -162,7 +162,7 @@ Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
   if \code{runCmd = FALSE}, return value is the (invisible) command line.
 }
 \description{
-/code{GridSurfaceCreate} creates command lines for the FUSION GridSurfaceCreate program and optionally executes them.
+\code{GridSurfaceCreate} creates command lines for the FUSION GridSurfaceCreate program and optionally executes them.
 }
 \examples{
 \dontrun{

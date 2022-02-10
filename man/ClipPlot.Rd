@@ -38,7 +38,7 @@ Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
   if \code{runCmd = FALSE}, return value is the (invisible) command line.
 }
 \description{
-/code{ClipPlot} creates command lines for the FUSION ClipData program and optionally executes them.
+\code{ClipPlot} creates command lines for the FUSION ClipData program and optionally executes them.
 Command lines are designed to clip a circular or square area centered in the \code{(x,y)}.
 }
 \examples{

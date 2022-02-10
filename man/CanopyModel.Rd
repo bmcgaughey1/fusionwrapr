@@ -199,7 +199,7 @@ Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
   if \code{runCmd = FALSE}, return value is the (invisible) command line.
 }
 \description{
-/code{CanopyModel} creates command lines for the FUSION CanopyModel program and optionally executes them.
+\code{CanopyModel} creates command lines for the FUSION CanopyModel program and optionally executes them.
 }
 \examples{
 \dontrun{
