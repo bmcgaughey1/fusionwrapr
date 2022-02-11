@@ -30,7 +30,9 @@ FUSION install folder (LTKmaster.log).
 \details{
 Note that the \code{logFile} can contain spaces (the folder name, file name, or both).
 However, using spaces is not recommended and may cause problems. If you include a folder
-name, use the backslash character as the path separator.
+name, you can use the backslash or forwardslash characters as the path separator.
+
+To reset logging behavior to use the log file in the FUSION install folder, use \code{useLogFile("")}.
 }
 \examples{
 \dontrun{

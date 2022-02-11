@@ -27,3 +27,4 @@ to \code{cl}.
 addOption(cl, zmin)
 }
 }
+\keyword{internal}

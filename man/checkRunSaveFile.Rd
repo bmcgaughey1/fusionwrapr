@@ -26,3 +26,4 @@ of the runCmd, saveCmd, and cmdFile options for functions that build command lin
 checkRunSaveFile(FALSE, TRUE, "test.bat")
 }
 }
+\keyword{internal}

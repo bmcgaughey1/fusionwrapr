@@ -46,20 +46,21 @@ ClipData(
   saveCmd = TRUE,
   cmdFile = NULL,
   cmdClear = FALSE,
-  echoCmd = FALSE
+  echoCmd = FALSE,
+  comment = NULL
 )
 }
 \arguments{
-\item{inputspecifier}{character: LIDAR data file template, name of a text file containing
+\item{inputspecifier}{character (\strong{required}): LIDAR data file template, name of a text file containing
 a list of file names (must have .txt extension), or a
 FUSION catalog file.}
 
-\item{samplefile}{character: Name for subsample file (extension will be added) or a
-text file containing sample information for 1 or more samples.
-Each line in the text file should have the output filename
-and the MinX MinY MaxX MaxY values for the sample area separated
-by spaces or commas. The output filename cannot contain spaces.
-To save compressed LAS files, specify the .laz extension.}
+\item{samplefile}{character (\strong{required}): Name for subsample file (extension will be added) or a
+text file containing sample information for 1 or more samples. Each line in the text file should
+have the output filename and the MinX MinY MaxX MaxY values for the sample area separated
+by spaces or commas. The output filename cannot contain spaces. To save compressed LAS files,
+specify the .laz extension. If the folder for the output file does not exist, it will be created
+when the function is called even when saving commands to a batch file.}
 
 \item{minx}{numeric: X for lower left corner of the sample area bounding box.}
 
@@ -179,6 +180,10 @@ should be written.}
 line is written.}
 
 \item{echoCmd}{boolean: indicates command line should be displayed.}
+
+\item{comment}{character string containing comment to be written to command file before writing
+the actual command. Only used when \code{runCmd = FALSE} and \code{saveCmd = TRUE}. When written,
+there is always a blank line before the comment line in the command file.}
 }
 \value{
 Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
@@ -188,8 +193,28 @@ Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
 \description{
 \code{ClipData} creates command lines for the FUSION ClipData program and optionally executes them.
 }
+\section{Multiple Commands}{
+
+  LTKFunctions generate a separate command for each item when the required parameters are lists.
+  This is useful when you want to use the same command and options but different input data and
+  output files. However, this works only when the switches and options are the same for all
+  commands (not lists). If you try to use a list of switches and/or options and a list of input
+  files, you will produce commands using all sets of switches and/or options for every input
+  file.
+}
+
 \examples{
 \dontrun{
 ClipData("*.las", "clip1.las", ground = "small.dtm", height = TRUE)
 }
 }
+\seealso{
+Other LTKFunctions: 
+\code{\link{CanopyModel}()},
+\code{\link{CloudMetrics}()},
+\code{\link{GridMetrics}()},
+\code{\link{GridSurfaceCreate}()},
+\code{\link{TreeSeg}()},
+\code{\link{fusionwrapr}}
+}
+\concept{LTKFunctions}

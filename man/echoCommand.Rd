@@ -27,3 +27,4 @@ line (depending of value of echoCmd parameter).
 echoCommand("ClipData", "/minht:2.0", "*.las clip1.las", echoCmd = TRUE)
 }
 }
+\keyword{internal}

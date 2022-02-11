@@ -81,6 +81,7 @@ verifyFolder <- function(folder) {
 #' @param x object
 #' @return A (invisible) boolean value, TRUE indicates the object value is not NULL,
 #'   FALSE indicates the object value is NULL.
+#' @keywords internal
 isOpt <- function(x) { invisible(!is.null(x)) }
 
 # ---------- addSwitch
@@ -98,6 +99,7 @@ isOpt <- function(x) { invisible(!is.null(x)) }
 #' \dontrun{
 #' addOption(cl, zmin)
 #' }
+#' @keywords internal
 addSwitch <- function(cl, opt) {
   if (opt) {
     cl <- paste(cl, paste0("/", deparse(substitute(opt))))
@@ -122,6 +124,7 @@ addSwitch <- function(cl, opt) {
 #' \dontrun{
 #' addOption(cl, zmin)
 #' }
+#' @keywords internal
 addOption <- function(cl, opt, quote = FALSE) {
   if (isOpt(opt)) {
     if (quote) {
@@ -148,6 +151,7 @@ addOption <- function(cl, opt, quote = FALSE) {
 #' \dontrun{
 #' addRequired(cl, "*.las")
 #' }
+#' @keywords internal
 addRequired <- function(cl, req, quote = FALSE) {
   if (quote) {
     cl <- paste(cl, shQuote(req))
@@ -175,6 +179,7 @@ addRequired <- function(cl, req, quote = FALSE) {
 #' \dontrun{
 #' programName("ClipData", TRUE)
 #' }
+#' @keywords internal
 programName <- function(name, use64bit = FALSE) {
   # if there is a global variable for the FUSION install folder, use it here
   if (use64bit) {
@@ -210,6 +215,7 @@ programName <- function(name, use64bit = FALSE) {
 #' \dontrun{
 #' checkRunSaveFile(FALSE, TRUE, "test.bat")
 #' }
+#' @keywords internal
 checkRunSaveFile <- function(runCmd, saveCmd, cmdFile) {
   if (!runCmd && saveCmd) {
     if (!isOpt(cmdFile)) {
@@ -235,6 +241,9 @@ checkRunSaveFile <- function(runCmd, saveCmd, cmdFile) {
 #'   line is written.
 #' @param cmdFile character string containing the name of the file to which commands
 #'   should be written.
+#' @param comment character string containing comment to be written to command file before writing
+#'   the actual command. Only used when \code{runCmd = FALSE} and \code{saveCmd = TRUE}. When written,
+#'   there is always a blank line before the comment line in the command file.
 #' @return A single integer value or vector of integers. If \code{required} is a vector of
 #'   strings and \code{runCmd = TRUE}, the return is a vector of return codes from the
 #'   operating system indicating the return values from the FUSION program. If \code{required}
@@ -248,7 +257,8 @@ checkRunSaveFile <- function(runCmd, saveCmd, cmdFile) {
 #' dispatchCommand("ClipData", "/minht:2.0", "*.las clip1.las",
 #'                  runCmd = FALSE, cmdClear = TRUE, cmdFile = "test.bat")
 #' }
-dispatchCommand <- function(cmd, options, required, runCmd, saveCmd, cmdClear, cmdFile) {
+#' @keywords internal
+dispatchCommand <- function(cmd, options, required, runCmd, saveCmd, cmdClear, cmdFile, comment = NULL) {
   # when runCmd=TRUE, saveCmd is never referenced. when runCmd=FALSE, the default is to write cmd to file
   # with runCmd=FALSE and saveCmd=FALSE, command is returned only (invisible)
   ret <- lapply(required, function(x) {
@@ -259,6 +269,9 @@ dispatchCommand <- function(cmd, options, required, runCmd, saveCmd, cmdClear, c
           if (is.null(cmdFile)) stop("Missing command file name!!")
 
           if (cmdClear) unlink(cmdFile)
+
+          if (!is.null(comment)) cat(paste0("\nREM ", comment, "\n"), file = cmdFile, append = TRUE)
+
           cat(paste0(buildCommand(cmd, options, x), "\n"), file = cmdFile, append = TRUE)
         }
         ret <- 0
@@ -284,6 +297,7 @@ dispatchCommand <- function(cmd, options, required, runCmd, saveCmd, cmdClear, c
 #' \dontrun{
 #' echoCommand("ClipData", "/minht:2.0", "*.las clip1.las", echoCmd = TRUE)
 #' }
+#' @keywords internal
 echoCommand <- function(cmd, options, required, echoCmd) {
   if (echoCmd) message(buildCommand(cmd, options, required))
 
@@ -304,6 +318,7 @@ echoCommand <- function(cmd, options, required, echoCmd) {
 #' \dontrun{
 #' buildCommand("ClipData", "/minht:2.0", "*.las clip1.las")
 #' }
+#' @keywords internal
 buildCommand <- function(cmd, options, required) {
   invisible(paste(trimws(cmd), trimws(options), trimws(required)))
 }
@@ -423,6 +438,10 @@ resetGlobalCommandOptions <- function() {
 #' @examples
 #' \dontrun{
 #' addToCommandFile("This is a comment!!", "Test/test.bat")
+#'
+#' # add a single blank line to the command file when setGlobalCommandOptions has
+#' # been called to set the command file name
+#' addToCommandFile(addLine = FALSE, comment = FALSE)
 #' }
 #' @export
 addToCommandFile <- function(
@@ -432,6 +451,10 @@ addToCommandFile <- function(
   comment = TRUE,
   addLine = TRUE
 ) {
+  if (fusionrEnv$areSet) {
+    if (is.null(cmdFile)) cmdFile <- fusionrEnv$cmdFile
+  }
+
   if (isOpt(cmdFile)) {
     if (cmdClear) unlink(cmdFile)
 
@@ -460,7 +483,9 @@ addToCommandFile <- function(
 #'
 #' Note that the \code{logFile} can contain spaces (the folder name, file name, or both).
 #' However, using spaces is not recommended and may cause problems. If you include a folder
-#' name, use the backslash character as the path separator.
+#' name, you can use the backslash or forwardslash characters as the path separator.
+#'
+#' To reset logging behavior to use the log file in the FUSION install folder, use \code{useLogFile("")}.
 #'
 #' @param logFile character: Name of the log file.
 #' @param cmdFile character: contains the name of the file to which commands
@@ -483,9 +508,14 @@ useLogFile <- function(
   cmdClear = FALSE
 ) {
   # check for options
-  if (!isOpt(logFile)
-      || !isOpt(cmdFile)) {
+  if (!isOpt(logFile)) {
     invisible(FALSE)
+  }
+
+  # use the global variables to set command dispatch options...global options
+  # are only used if the corresponding option was not passed to the function
+  if (fusionrEnv$areSet) {
+    if (missing(cmdFile)) cmdFile <- fusionrEnv$cmdFile
   }
 
   # add a comment...this will also handle clearing the command file if needed
@@ -496,11 +526,11 @@ useLogFile <- function(
   )
 
   if (logClear) {
-    addToCommandFile(paste0("DEL ", logFile), cmdFile = cmdFile, comment = FALSE)
+    addToCommandFile(paste0("DEL ", shQuote(logFile)), cmdFile = cmdFile, comment = FALSE, addLine = FALSE)
   }
 
   # write command to set environment variable
-  addToCommandFile(paste0("SET LTKLOG=", logFile), cmdFile = cmdFile, comment = FALSE)
+  addToCommandFile(paste0("SET LTKLOG=", logFile), cmdFile = cmdFile, comment = FALSE, addLine = FALSE)
 
   invisible(TRUE)
 }
@@ -523,6 +553,10 @@ runCommandFile <- function(
   cmdFile = NULL,
   ...
 ) {
+  if (fusionrEnv$areSet) {
+    if (is.null(cmdFile)) cmdFile <- fusionrEnv$cmdFile
+  }
+
   if (isOpt(cmdFile)) {
     system2(cmdFile, ...)
 
@@ -542,14 +576,18 @@ runCommandFile <- function(
 #' \code{ClipPlot} creates command lines for the FUSION ClipData program and optionally executes them.
 #' Command lines are designed to clip a circular or square area centered in the \code{(x,y)}.
 #'
-#' @param inputspecifier character: LIDAR data file template, name of a text file containing
+#' @template MultipleCommands
+#'
+#' @param inputspecifier character (\strong{required}): LIDAR data file template, name of a text file containing
 #'   a list of file names (must have .txt extension), or a
 #'   FUSION catalog file.
-#' @param samplefile character: Name for plot clip file (extension will be added).
+#' @param samplefile character (\strong{required}): Name for plot clip file (extension will be added).
 #'   \code{samplefile} cannot contain spaces. To save compressed LAS files, specify the .laz extension.
-#' @param x numeric: Easting value for plot location.
-#' @param y numeric: Northing value for plot location.
-#' @param radius numeric: Radius for round (circular) plots or half width for square plots.
+#'   If the folder for the output file does not exist, it will be created
+#'   when the function is called even when saving commands to a batch file.
+#' @param x numeric (\strong{required}): Easting value for plot location.
+#' @param y numeric (\strong{required}): Northing value for plot location.
+#' @param radius numeric (\strong{required}): Radius for round (circular) plots or half width for square plots.
 #' @param shape numeric: default = 1: Shape of the sample area (0 = rectangle, 1 = circle).
 #' @param ... Additional parameters that will be passed to \code{ClipData}.
 #' @return Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
@@ -602,29 +640,22 @@ ClipPlot <- function(
 #'
 #' \code{ClipData} creates command lines for the FUSION ClipData program and optionally executes them.
 #'
-#' @param inputspecifier character: LIDAR data file template, name of a text file containing
+#' @template MultipleCommands
+#'
+#' @param inputspecifier character (\strong{required}): LIDAR data file template, name of a text file containing
 #'   a list of file names (must have .txt extension), or a
 #'   FUSION catalog file.
-#' @param samplefile character: Name for subsample file (extension will be added) or a
-#'   text file containing sample information for 1 or more samples.
-#'   Each line in the text file should have the output filename
-#'   and the MinX MinY MaxX MaxY values for the sample area separated
-#'   by spaces or commas. The output filename cannot contain spaces.
-#'   To save compressed LAS files, specify the .laz extension.
+#' @param samplefile character (\strong{required}): Name for subsample file (extension will be added) or a
+#'   text file containing sample information for 1 or more samples. Each line in the text file should
+#'   have the output filename and the MinX MinY MaxX MaxY values for the sample area separated
+#'   by spaces or commas. The output filename cannot contain spaces. To save compressed LAS files,
+#'   specify the .laz extension. If the folder for the output file does not exist, it will be created
+#'   when the function is called even when saving commands to a batch file.
 #' @param minx numeric: X for lower left corner of the sample area bounding box.
 #' @param miny numeric: Y for lower left corner of the sample area bounding box.
 #' @param maxx numeric: X for upper right corner of the sample area bounding box.
 #' @param maxy numeric: Y for upper right corner of the sample area bounding box.
-#' @param quiet boolean: Suppress all output during the run.
-#' @param verbose boolean: Display all status information during the run.
-#' @param version boolean: Report version information and exit with no processing.
-#' @param newlog boolean: Erase the existing log file and start a new log
-#' @param log character: Use the name specified for the log file.
-#' @param locale boolean: Adjust program logic to input and output locale-specific numeric
-#'   formats (e.g. use a comma for the decimal separator).
-#' @param nolaszipdll boolean: Suppress the use of the LASzip dll (c) Martin Isenburg...
-#'   removes support for compressed LAS (LAZ) files. This option
-#'   is only useful for programs that read or write point files.
+#' @template StandardOptions
 #' @param shape numeric: Shape of the sample area (0 = rectangle, 1 = circle).
 #' @param decimate numeric: Skip # points between included points (must be > 0).
 #' @param ground character: Use a surface file with /zmin to include points above zmin
@@ -690,6 +721,9 @@ ClipPlot <- function(
 #' @param cmdClear boolean: indicates file for command should be deleted before the command
 #'   line is written.
 #' @param echoCmd boolean: indicates command line should be displayed.
+#' @param comment character string containing comment to be written to command file before writing
+#'   the actual command. Only used when \code{runCmd = FALSE} and \code{saveCmd = TRUE}. When written,
+#'   there is always a blank line before the comment line in the command file.
 #' @return Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
 #'   the (invisible) integer value return from the operating system after running the command.
 #'   if \code{runCmd = FALSE}, return value is the (invisible) command line.
@@ -697,6 +731,7 @@ ClipPlot <- function(
 #' \dontrun{
 #' ClipData("*.las", "clip1.las", ground = "small.dtm", height = TRUE)
 #' }
+#' @family LTKFunctions
 #' @export
 ClipData <- function(
   inputspecifier = NULL,
@@ -740,7 +775,8 @@ ClipData <- function(
   saveCmd = TRUE,
   cmdFile = NULL,
   cmdClear = FALSE,
-  echoCmd = FALSE
+  echoCmd = FALSE,
+  comment = NULL
 ) {
   # check for required options
   if (!isOpt(inputspecifier)
@@ -838,7 +874,7 @@ ClipData <- function(
 
   echoCommand(cmd, options, required, echoCmd)
 
-  ret <- dispatchCommand(cmd, options, required, runCmd, saveCmd, cmdClear, cmdFile)
+  ret <- dispatchCommand(cmd, options, required, runCmd, saveCmd, cmdClear, cmdFile, comment)
 
   if (runCmd) {
     invisible(ret)
@@ -854,19 +890,14 @@ ClipData <- function(
 #'
 #' \code{CloudMetrics} creates command lines for the FUSION CloudMetrics program and optionally executes them.
 #'
-#' @param inputspecifier  character: LIDAR data file template, name of text file containing a
+#' @template MultipleCommands
+#'
+#' @param inputspecifier  character (\strong{required}): LIDAR data file template, name of text file containing a
 #'   list of file names (must have .txt extension), or a catalog file.
-#' @param outputfile character: Name for output file to contain cloud metrics (usually .csv extension).
-#' @param quiet boolean: Suppress all output during the run.
-#' @param verbose boolean: Display all status information during the run.
-#' @param version boolean: Report version information and exit with no processing.
-#' @param newlog boolean: Erase the existing log file and start a new log.
-#' @param log character string: Use the name specified for the log file.
-#' @param locale boolean: Adjust program logic to input and output locale-specific numeric
-#'   formats (e.g. use a comma for the decimal separator).
-#' @param nolaszipdll boolean: Suppress the use of the LASzip dll (c) Martin Isenburg...
-#'   removes support for compressed LAS (LAZ) files. This option
-#'   is only useful for programs that read or write point files.
+#' @param outputfile character (\strong{required}): Name for output file to contain cloud metrics (usually .csv extension).
+#'   If the folder for the output file does not exist, it will be created
+#'   when the function is called even when saving commands to a batch file.
+#' @template StandardOptions
 #' @param above numeric: Compute proportion of first returns above # (canopy cover).
 #'   Also compute the proportion of all returns above # and the
 #'   (number of returns above #) / (total number of 1st returns).
@@ -934,6 +965,9 @@ ClipData <- function(
 #' @param cmdClear boolean: indicates file for command should be deleted before the command
 #'   line is written.
 #' @param echoCmd boolean: indicates command line should be displayed.
+#' @param comment character string containing comment to be written to command file before writing
+#'   the actual command. Only used when \code{runCmd = FALSE} and \code{saveCmd = TRUE}. When written,
+#'   there is always a blank line before the comment line in the command file.
 #' @return Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
 #'   the (invisible) integer value return from the operating system after running the command.
 #'   if \code{runCmd = FALSE}, return value is the (invisible) command line.
@@ -941,6 +975,7 @@ ClipData <- function(
 #' \dontrun{
 #' CloudMetrics("points/*.las", "test.csv", minht = 2.0)
 #' }
+#' @family LTKFunctions
 #' @export
 CloudMetrics <- function(
   inputspecifier = NULL,
@@ -975,7 +1010,8 @@ CloudMetrics <- function(
   saveCmd = TRUE,
   cmdFile = NULL,
   cmdClear = FALSE,
-  echoCmd = FALSE
+  echoCmd = FALSE,
+  comment = NULL
 ) {
   # check for required options
   if (!isOpt(inputspecifier)
@@ -1050,7 +1086,7 @@ CloudMetrics <- function(
 
   echoCommand(cmd, options, required, echoCmd)
 
-  ret <- dispatchCommand(cmd, options, required, runCmd, saveCmd, cmdClear, cmdFile)
+  ret <- dispatchCommand(cmd, options, required, runCmd, saveCmd, cmdClear, cmdFile, comment)
 
   if (runCmd) {
     invisible(ret)
@@ -1066,35 +1102,15 @@ CloudMetrics <- function(
 #'
 #' \code{GridSurfaceCreate} creates command lines for the FUSION GridSurfaceCreate program and optionally executes them.
 #'
-#' @param surfacefile character: Name for output surface file (stored in PLANS DTM format with .dtm extension).
-#' @param cellsize numeric: Desired grid cell size in the same units as LIDAR data.
-#' @param xyunits character: Units for LIDAR data XY (M for meters or F for feet).
-#' @param zunits character: Units for LIDAR data elevations (M for meters or F for feet).
-#' @param coordsys numeric: Coordinate system for LIDAR data:
-#'   0 for unknown
-#'   1 for UTM
-#'   2 for state plane)
-#' @param zone numeric: Coordinate system zone for LIDAR data (0 for unknown).
-#' @param horizdatum numeric: Horizontal datum:
-#'   0 for unknown
-#'   1 for NAD27
-#'   2 for NAD83
-#' @param vertdatum numeric: Vertical datum:
-#'   0 for unknown
-#'   1 for NGVD29
-#'   2 for NAVD88
-#'   3 for GRS80
-#' @param datafile character: Name(s) of lidar data files.
-#' @param quiet boolean: Suppress all output during the run.
-#' @param verbose boolean: Display all status information during the run.
-#' @param version boolean: Report version information and exit with no processing.
-#' @param newlog boolean: Erase the existing log file and start a new log
-#' @param log character: Use the name specified for the log file.
-#' @param locale boolean: Adjust program logic to input and output locale-specific numeric
-#'   formats (e.g. use a comma for the decimal separator).
-#' @param nolaszipdll boolean: Suppress the use of the LASzip dll (c) Martin Isenburg...
-#'   removes support for compressed LAS (LAZ) files. This option
-#'   is only useful for programs that read or write point files.
+#' @template MultipleCommands
+#'
+#' @param surfacefile character (\strong{required}): Name for output surface file (stored in PLANS DTM format with .dtm extension).
+#'   If the folder for the output file does not exist, it will be created
+#'   when the function is called even when saving commands to a batch file.
+#' @param cellsize numeric (\strong{required}): Desired grid cell size in the same units as LIDAR data.
+#' @template CoordInfo
+#' @param datafile character (\strong{required}): Name(s) of lidar data files.
+#' @template StandardOptions
 #' @param median numeric: Apply median filter to model using # by # neighbor window.
 #' @param smooth numeric: Apply mean filter to model using # by # neighbor window.
 #' @param slope numeric: Filter areas from the surface with slope greater than # percent.
@@ -1140,6 +1156,9 @@ CloudMetrics <- function(
 #' @param cmdClear boolean: indicates file for command should be deleted before the command
 #'   line is written.
 #' @param echoCmd boolean: indicates command line should be displayed.
+#' @param comment character string containing comment to be written to command file before writing
+#'   the actual command. Only used when \code{runCmd = FALSE} and \code{saveCmd = TRUE}. When written,
+#'   there is always a blank line before the comment line in the command file.
 #' @return Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
 #'   the (invisible) integer value return from the operating system after running the command.
 #'   if \code{runCmd = FALSE}, return value is the (invisible) command line.
@@ -1147,6 +1166,7 @@ CloudMetrics <- function(
 #' \dontrun{
 #' GridSurfaceCreate("test.dtm", 2.0, "M", "M", 1, 10, 2, 2, "Test/pts.las", class = "2")
 #' }
+#' @family LTKFunctions
 #' @export
 GridSurfaceCreate <- function(
   surfacefile = NULL,
@@ -1185,7 +1205,8 @@ GridSurfaceCreate <- function(
   saveCmd = TRUE,
   cmdFile = NULL,
   cmdClear = FALSE,
-  echoCmd = FALSE
+  echoCmd = FALSE,
+  comment = NULL
 ) {
   # check for required options
   if (!isOpt(surfacefile)
@@ -1269,7 +1290,7 @@ GridSurfaceCreate <- function(
 
   echoCommand(cmd, options, required, echoCmd)
 
-  ret <- dispatchCommand(cmd, options, required, runCmd, saveCmd, cmdClear, cmdFile)
+  ret <- dispatchCommand(cmd, options, required, runCmd, saveCmd, cmdClear, cmdFile, comment)
 
   if (runCmd) {
     invisible(ret)
@@ -1285,25 +1306,18 @@ GridSurfaceCreate <- function(
 #'
 #' \code{GridMetrics} creates command lines for the FUSION GridMetrics program and optionally executes them.
 #'
-#' @param groundfile  character: Name for ground surface model (PLANS DTM with .dtm extension).
+#' @template MultipleCommands
+#'
+#' @param groundfile  character (\strong{required}): Name for ground surface model (PLANS DTM with .dtm extension).
 #'   May be wildcard or text list file (extension .txt only).
-#' @param heightbreak numeric: Height break for cover calculation.
-#' @param cellsize numeric: Desired grid cell size in the same units as LIDAR data.
-#' @param outputfile character: Base name for output file. Metrics are stored in CSV format with
-#'   .csv extension unless the /nocsv switch is used. Other outputs
-#'   are stored in files named using the base name and additional
-#'   descriptive information.
-#' @param datafile character: Name(s) of lidar data files.
-#' @param quiet boolean: Suppress all output during the run.
-#' @param verbose boolean: Display all status information during the run.
-#' @param version boolean: Report version information and exit with no processing.
-#' @param newlog boolean: Erase the existing log file and start a new log.
-#' @param log character string: Use the name specified for the log file.
-#' @param locale boolean: Adjust program logic to input and output locale-specific numeric
-#'   formats (e.g. use a comma for the decimal separator).
-#' @param nolaszipdll boolean: Suppress the use of the LASzip dll (c) Martin Isenburg...
-#'   removes support for compressed LAS (LAZ) files. This option
-#'   is only useful for programs that read or write point files.
+#' @param heightbreak numeric (\strong{required}): Height break for cover calculation.
+#' @param cellsize numeric (\strong{required}): Desired grid cell size in the same units as LIDAR data.
+#' @param outputfile character (\strong{required}): Base name for output file. Metrics are stored in CSV format with
+#'   .csv extension unless the /nocsv switch is used. Other outputs are stored in files named using the
+#'   base name and additional descriptive information. If the folder for the output file does not exist,
+#'   it will be created  when the function is called even when saving commands to a batch file.
+#' @param datafile character (\strong{required}): Name(s) of lidar data files.
+#' @template StandardOptions
 #' @param outlier character: "low,high": Omit points with elevations below low and above high.
 #'   When used with data that has been normalized using a ground
 #'   surface, low and high are interpreted as heights above ground.
@@ -1407,6 +1421,9 @@ GridSurfaceCreate <- function(
 #' @param cmdClear boolean: indicates file for command should be deleted before the command
 #'   line is written.
 #' @param echoCmd boolean: indicates command line should be displayed.
+#' @param comment character string containing comment to be written to command file before writing
+#'   the actual command. Only used when \code{runCmd = FALSE} and \code{saveCmd = TRUE}. When written,
+#'   there is always a blank line before the comment line in the command file.
 #' @return Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
 #'   the (invisible) integer value return from the operating system after running the command.
 #'   if \code{runCmd = FALSE}, return value is the (invisible) command line.
@@ -1414,6 +1431,7 @@ GridSurfaceCreate <- function(
 #' \dontrun{
 #' GridMetrics("points/*.las", "test.csv", minht = 2.0)
 #' }
+#' @family LTKFunctions
 #' @export
 GridMetrics <- function(
   groundfile = NULL,
@@ -1458,7 +1476,8 @@ GridMetrics <- function(
   saveCmd = TRUE,
   cmdFile = NULL,
   cmdClear = FALSE,
-  echoCmd = FALSE
+  echoCmd = FALSE,
+  comment = NULL
 ) {
   # check for required options
   if (!isOpt(groundfile)
@@ -1541,7 +1560,7 @@ GridMetrics <- function(
 
   echoCommand(cmd, options, required, echoCmd)
 
-  ret <- dispatchCommand(cmd, options, required, runCmd, saveCmd, cmdClear, cmdFile)
+  ret <- dispatchCommand(cmd, options, required, runCmd, saveCmd, cmdClear, cmdFile, comment)
 
   if (runCmd) {
     invisible(ret)
@@ -1557,35 +1576,15 @@ GridMetrics <- function(
 #'
 #' \code{CanopyModel} creates command lines for the FUSION CanopyModel program and optionally executes them.
 #'
-#' @param surfacefile character: Name for output surface file (stored in PLANS DTM format with .dtm extension).
-#' @param cellsize numeric: Desired grid cell size in the same units as LIDAR data.
-#' @param xyunits character: Units for LIDAR data XY (M for meters or F for feet).
-#' @param zunits character: Units for LIDAR data elevations (M for meters or F for feet).
-#' @param coordsys numeric: Coordinate system for LIDAR data:
-#'   0 for unknown
-#'   1 for UTM
-#'   2 for state plane)
-#' @param zone numeric: Coordinate system zone for LIDAR data (0 for unknown).
-#' @param horizdatum numeric: Horizontal datum:
-#'   0 for unknown
-#'   1 for NAD27
-#'   2 for NAD83
-#' @param vertdatum numeric: Vertical datum:
-#'   0 for unknown
-#'   1 for NGVD29
-#'   2 for NAVD88
-#'   3 for GRS80
-#' @param datafile character: Name(s) of lidar data files.
-#' @param quiet boolean: Suppress all output during the run.
-#' @param verbose boolean: Display all status information during the run.
-#' @param version boolean: Report version information and exit with no processing.
-#' @param newlog boolean: Erase the existing log file and start a new log
-#' @param log character: Use the name specified for the log file.
-#' @param locale boolean: Adjust program logic to input and output locale-specific numeric
-#'   formats (e.g. use a comma for the decimal separator).
-#' @param nolaszipdll boolean: Suppress the use of the LASzip dll (c) Martin Isenburg...
-#'   removes support for compressed LAS (LAZ) files. This option
-#'   is only useful for programs that read or write point files.
+#' @template MultipleCommands
+#'
+#' @param surfacefile character (\strong{required}): Name for output surface file (stored in PLANS DTM format with .dtm extension). If the
+#'   folder for the output file does not exist, it will be created  when the function is called even when saving
+#'   commands to a batch file.
+#' @param cellsize numeric (\strong{required}): Desired grid cell size in the same units as LIDAR data.
+#' @template CoordInfo
+#' @param datafile character (\strong{required}): Name(s) of lidar data files.
+#' @template StandardOptions
 #' @param median numeric: Apply median filter to model using # by # neighbor window.
 #' @param smooth numeric: Apply mean filter to model using # by # neighbor window.
 #' @param texture numeric: Calculate the surface texture metric using # by # neighbor window.
@@ -1652,6 +1651,9 @@ GridMetrics <- function(
 #' @param cmdClear boolean: indicates file for command should be deleted before the command
 #'   line is written.
 #' @param echoCmd boolean: indicates command line should be displayed.
+#' @param comment character string containing comment to be written to command file before writing
+#'   the actual command. Only used when \code{runCmd = FALSE} and \code{saveCmd = TRUE}. When written,
+#'   there is always a blank line before the comment line in the command file.
 #' @return Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
 #'   the (invisible) integer value return from the operating system after running the command.
 #'   if \code{runCmd = FALSE}, return value is the (invisible) command line.
@@ -1659,6 +1661,7 @@ GridMetrics <- function(
 #' \dontrun{
 #' CanopyModel("test.dtm", 2.0, "M", "M", 1, 10, 2, 2, "Test/pts.las")
 #' }
+#' @family LTKFunctions
 #' @export
 CanopyModel <- function(
   surfacefile = NULL,
@@ -1705,7 +1708,8 @@ CanopyModel <- function(
   saveCmd = TRUE,
   cmdFile = NULL,
   cmdClear = FALSE,
-  echoCmd = FALSE
+  echoCmd = FALSE,
+  comment = NULL
 ) {
   # check for required options
   if (!isOpt(surfacefile)
@@ -1797,7 +1801,7 @@ CanopyModel <- function(
 
   echoCommand(cmd, options, required, echoCmd)
 
-  ret <- dispatchCommand(cmd, options, required, runCmd, saveCmd, cmdClear, cmdFile)
+  ret <- dispatchCommand(cmd, options, required, runCmd, saveCmd, cmdClear, cmdFile, comment)
 
   if (runCmd) {
     invisible(ret)
@@ -1811,26 +1815,20 @@ CanopyModel <- function(
 #
 #' FUSION R command line interface -- Function to create command lines for the TreeSeg program.
 #'
-#' \code{CanopyModel} creates command lines for the FUSION TreeSeg program and optionally executes them.
+#' \code{TreeSeg} creates command lines for the FUSION TreeSeg program and optionally executes them.
 #'
-#' @param CHM character: Name for canopy height model (PLANS DTM with .dtm extension).
+#' @template MultipleCommands
+#'
+#' @param CHM character (\strong{required}): Name for canopy height model (PLANS DTM with .dtm extension).
 #'   May be wildcard or text list file (extension .txt only). This can be a canopy surface
 #'   model if the /ground option is used to specify a ground surface for normalization.
-#' @param ht_threshold numeric: Minimum height for object segmentation. Portions of the CHM
+#' @param ht_threshold numeric (\strong{required}): Minimum height for object segmentation. Portions of the CHM
 #'   below this height are not considered in the segmentation.
-#' @param outputfile character: Base name for output file. Metrics are stored in CSV format with
+#' @param outputfile character (\strong{required}): Base name for output file. Metrics are stored in CSV format with
 #'   .csv extension. Other outputs are stored in files named using the base name and additional
-#'   descriptive information.
-#' @param quiet boolean: Suppress all output during the run.
-#' @param verbose boolean: Display all status information during the run.
-#' @param version boolean: Report version information and exit with no processing.
-#' @param newlog boolean: Erase the existing log file and start a new log
-#' @param log character: Use the name specified for the log file.
-#' @param locale boolean: Adjust program logic to input and output locale-specific numeric
-#'   formats (e.g. use a comma for the decimal separator).
-#' @param nolaszipdll boolean: Suppress the use of the LASzip dll (c) Martin Isenburg...
-#'   removes support for compressed LAS (LAZ) files. This option
-#'   is only useful for programs that read or write point files.
+#'   descriptive information. If the folder for the output file does not exist, it will be created
+#'   when the function is called even when saving commands to a batch file.
+#' @template StandardOptions
 #' @param height boolean: Normalize canopy surface model(s) using ground model(s).
 #' @param ptheight numeric: Normalize point heights using ground model(s).
 #' @param maxht numeric: Force the maximum height for the segmentation. This will override
@@ -1858,7 +1856,8 @@ CanopyModel <- function(
 #' @param aspect boolean: Calculate surface aspect.
 #' @param clipfolder character: folder name where point files for individual clips are stored. Used
 #'   only with the /points option. If not specified, point files are stored in the same folder with
-#'   other outputs. If the folder does not exist, it will be created.
+#'   other outputs. If the folder does not exist, it will be created when the function is called even
+#'   when saving commands to a batch file.
 #' @param shape boolean: Create a shapefile containing the high points and basin metrics.
 #' @param cleantile boolean: Output an ASCII raster map that only includes basins within the
 #'   reporting extent defined by the /grid, /gridxy, and /align options.
@@ -1876,6 +1875,9 @@ CanopyModel <- function(
 #' @param cmdClear boolean: indicates file for command should be deleted before the command
 #'   line is written.
 #' @param echoCmd boolean: indicates command line should be displayed.
+#' @param comment character string containing comment to be written to command file before writing
+#'   the actual command. Only used when \code{runCmd = FALSE} and \code{saveCmd = TRUE}. When written,
+#'   there is always a blank line before the comment line in the command file.
 #' @return Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
 #'   the (invisible) integer value return from the operating system after running the command.
 #'   if \code{runCmd = FALSE}, return value is the (invisible) command line.
@@ -1883,6 +1885,7 @@ CanopyModel <- function(
 #' \dontrun{
 #' TreeSeg("CHM.dtm", 2.0, "trees.csv")
 #' }
+#' @family LTKFunctions
 #' @export
 TreeSeg <- function(
   CHM = NULL,
@@ -1915,7 +1918,8 @@ TreeSeg <- function(
   saveCmd = TRUE,
   cmdFile = NULL,
   cmdClear = FALSE,
-  echoCmd = FALSE
+  echoCmd = FALSE,
+  comment = NULL
 ) {
   # check for required options
   if (!isOpt(CHM)
@@ -1993,7 +1997,7 @@ TreeSeg <- function(
 
   echoCommand(cmd, options, required, echoCmd)
 
-  ret <- dispatchCommand(cmd, options, required, runCmd, saveCmd, cmdClear, cmdFile)
+  ret <- dispatchCommand(cmd, options, required, runCmd, saveCmd, cmdClear, cmdFile, comment)
 
   if (runCmd) {
     invisible(ret)

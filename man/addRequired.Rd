@@ -25,3 +25,4 @@ for a required parameter. The resulting string is appended to \code{cl}.
 addRequired(cl, "*.las")
 }
 }
+\keyword{internal}

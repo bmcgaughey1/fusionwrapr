@@ -37,5 +37,9 @@ but with \code{comment=FALSE}, you can write commands.
 \examples{
 \dontrun{
 addToCommandFile("This is a comment!!", "Test/test.bat")
+
+# add a single blank line to the command file when setGlobalCommandOptions has
+# been called to set the command file name
+addToCommandFile(addLine = FALSE, comment = FALSE)
 }
 }

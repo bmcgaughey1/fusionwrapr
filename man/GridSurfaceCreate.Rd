@@ -41,37 +41,40 @@ GridSurfaceCreate(
   saveCmd = TRUE,
   cmdFile = NULL,
   cmdClear = FALSE,
-  echoCmd = FALSE
+  echoCmd = FALSE,
+  comment = NULL
 )
 }
 \arguments{
-\item{surfacefile}{character: Name for output surface file (stored in PLANS DTM format with .dtm extension).}
+\item{surfacefile}{character (\strong{required}): Name for output surface file (stored in PLANS DTM format with .dtm extension).
+If the folder for the output file does not exist, it will be created
+when the function is called even when saving commands to a batch file.}
 
-\item{cellsize}{numeric: Desired grid cell size in the same units as LIDAR data.}
+\item{cellsize}{numeric (\strong{required}): Desired grid cell size in the same units as LIDAR data.}
 
-\item{xyunits}{character: Units for LIDAR data XY (M for meters or F for feet).}
+\item{xyunits}{character (\strong{required}): Units for LIDAR data XY (M for meters or F for feet).}
 
-\item{zunits}{character: Units for LIDAR data elevations (M for meters or F for feet).}
+\item{zunits}{character (\strong{required}): Units for LIDAR data elevations (M for meters or F for feet).}
 
-\item{coordsys}{numeric: Coordinate system for LIDAR data:
+\item{coordsys}{numeric (\strong{required}): Coordinate system for LIDAR data:
 0 for unknown
 1 for UTM
 2 for state plane)}
 
-\item{zone}{numeric: Coordinate system zone for LIDAR data (0 for unknown).}
+\item{zone}{numeric (\strong{required}): Coordinate system zone for LIDAR data (0 for unknown).}
 
-\item{horizdatum}{numeric: Horizontal datum:
+\item{horizdatum}{numeric (\strong{required}): Horizontal datum:
 0 for unknown
 1 for NAD27
 2 for NAD83}
 
-\item{vertdatum}{numeric: Vertical datum:
+\item{vertdatum}{numeric (\strong{required}): Vertical datum:
 0 for unknown
 1 for NGVD29
 2 for NAVD88
 3 for GRS80}
 
-\item{datafile}{character: Name(s) of lidar data files.}
+\item{datafile}{character (\strong{required}): Name(s) of lidar data files.}
 
 \item{quiet}{boolean: Suppress all output during the run.}
 
@@ -155,6 +158,10 @@ should be written.}
 line is written.}
 
 \item{echoCmd}{boolean: indicates command line should be displayed.}
+
+\item{comment}{character string containing comment to be written to command file before writing
+the actual command. Only used when \code{runCmd = FALSE} and \code{saveCmd = TRUE}. When written,
+there is always a blank line before the comment line in the command file.}
 }
 \value{
 Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
@@ -164,8 +171,28 @@ Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
 \description{
 \code{GridSurfaceCreate} creates command lines for the FUSION GridSurfaceCreate program and optionally executes them.
 }
+\section{Multiple Commands}{
+
+  LTKFunctions generate a separate command for each item when the required parameters are lists.
+  This is useful when you want to use the same command and options but different input data and
+  output files. However, this works only when the switches and options are the same for all
+  commands (not lists). If you try to use a list of switches and/or options and a list of input
+  files, you will produce commands using all sets of switches and/or options for every input
+  file.
+}
+
 \examples{
 \dontrun{
 GridSurfaceCreate("test.dtm", 2.0, "M", "M", 1, 10, 2, 2, "Test/pts.las", class = "2")
 }
 }
+\seealso{
+Other LTKFunctions: 
+\code{\link{CanopyModel}()},
+\code{\link{ClipData}()},
+\code{\link{CloudMetrics}()},
+\code{\link{GridMetrics}()},
+\code{\link{TreeSeg}()},
+\code{\link{fusionwrapr}}
+}
+\concept{LTKFunctions}

@@ -27,3 +27,4 @@ path if it has been provided using \code{setFUSIONpath()}.
 programName("ClipData", TRUE)
 }
 }
+\keyword{internal}

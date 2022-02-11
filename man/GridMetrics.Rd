@@ -47,23 +47,24 @@ GridMetrics(
   saveCmd = TRUE,
   cmdFile = NULL,
   cmdClear = FALSE,
-  echoCmd = FALSE
+  echoCmd = FALSE,
+  comment = NULL
 )
 }
 \arguments{
-\item{groundfile}{character: Name for ground surface model (PLANS DTM with .dtm extension).
+\item{groundfile}{character (\strong{required}): Name for ground surface model (PLANS DTM with .dtm extension).
 May be wildcard or text list file (extension .txt only).}
 
-\item{heightbreak}{numeric: Height break for cover calculation.}
+\item{heightbreak}{numeric (\strong{required}): Height break for cover calculation.}
 
-\item{cellsize}{numeric: Desired grid cell size in the same units as LIDAR data.}
+\item{cellsize}{numeric (\strong{required}): Desired grid cell size in the same units as LIDAR data.}
 
-\item{outputfile}{character: Base name for output file. Metrics are stored in CSV format with
-.csv extension unless the /nocsv switch is used. Other outputs
-are stored in files named using the base name and additional
-descriptive information.}
+\item{outputfile}{character (\strong{required}): Base name for output file. Metrics are stored in CSV format with
+.csv extension unless the /nocsv switch is used. Other outputs are stored in files named using the
+base name and additional descriptive information. If the folder for the output file does not exist,
+it will be created  when the function is called even when saving commands to a batch file.}
 
-\item{datafile}{character: Name(s) of lidar data files.}
+\item{datafile}{character (\strong{required}): Name(s) of lidar data files.}
 
 \item{quiet}{boolean: Suppress all output during the run.}
 
@@ -71,9 +72,9 @@ descriptive information.}
 
 \item{version}{boolean: Report version information and exit with no processing.}
 
-\item{newlog}{boolean: Erase the existing log file and start a new log.}
+\item{newlog}{boolean: Erase the existing log file and start a new log}
 
-\item{log}{character string: Use the name specified for the log file.}
+\item{log}{character: Use the name specified for the log file.}
 
 \item{locale}{boolean: Adjust program logic to input and output locale-specific numeric
 formats (e.g. use a comma for the decimal separator).}
@@ -215,6 +216,10 @@ should be written.}
 line is written.}
 
 \item{echoCmd}{boolean: indicates command line should be displayed.}
+
+\item{comment}{character string containing comment to be written to command file before writing
+the actual command. Only used when \code{runCmd = FALSE} and \code{saveCmd = TRUE}. When written,
+there is always a blank line before the comment line in the command file.}
 }
 \value{
 Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
@@ -224,8 +229,28 @@ Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
 \description{
 \code{GridMetrics} creates command lines for the FUSION GridMetrics program and optionally executes them.
 }
+\section{Multiple Commands}{
+
+  LTKFunctions generate a separate command for each item when the required parameters are lists.
+  This is useful when you want to use the same command and options but different input data and
+  output files. However, this works only when the switches and options are the same for all
+  commands (not lists). If you try to use a list of switches and/or options and a list of input
+  files, you will produce commands using all sets of switches and/or options for every input
+  file.
+}
+
 \examples{
 \dontrun{
 GridMetrics("points/*.las", "test.csv", minht = 2.0)
 }
 }
+\seealso{
+Other LTKFunctions: 
+\code{\link{CanopyModel}()},
+\code{\link{ClipData}()},
+\code{\link{CloudMetrics}()},
+\code{\link{GridSurfaceCreate}()},
+\code{\link{TreeSeg}()},
+\code{\link{fusionwrapr}}
+}
+\concept{LTKFunctions}

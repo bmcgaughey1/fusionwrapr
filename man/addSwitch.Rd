@@ -24,3 +24,4 @@ for command line switches. The resulting string is appended to \code{cl}.
 addOption(cl, zmin)
 }
 }
+\keyword{internal}

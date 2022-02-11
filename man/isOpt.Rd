@@ -19,3 +19,4 @@ value of an object: usually a function parameter. While this simply
 wraps \code{is.null()}, it makes for slightly more readable code in the
 functions that build command lines.
 }
+\keyword{internal}

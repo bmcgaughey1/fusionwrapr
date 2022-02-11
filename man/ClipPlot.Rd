@@ -15,18 +15,20 @@ ClipPlot(
 )
 }
 \arguments{
-\item{inputspecifier}{character: LIDAR data file template, name of a text file containing
+\item{inputspecifier}{character (\strong{required}): LIDAR data file template, name of a text file containing
 a list of file names (must have .txt extension), or a
 FUSION catalog file.}
 
-\item{samplefile}{character: Name for plot clip file (extension will be added).
-\code{samplefile} cannot contain spaces. To save compressed LAS files, specify the .laz extension.}
+\item{samplefile}{character (\strong{required}): Name for plot clip file (extension will be added).
+\code{samplefile} cannot contain spaces. To save compressed LAS files, specify the .laz extension.
+If the folder for the output file does not exist, it will be created
+when the function is called even when saving commands to a batch file.}
 
-\item{x}{numeric: Easting value for plot location.}
+\item{x}{numeric (\strong{required}): Easting value for plot location.}
 
-\item{y}{numeric: Northing value for plot location.}
+\item{y}{numeric (\strong{required}): Northing value for plot location.}
 
-\item{radius}{numeric: Radius for round (circular) plots or half width for square plots.}
+\item{radius}{numeric (\strong{required}): Radius for round (circular) plots or half width for square plots.}
 
 \item{shape}{numeric: default = 1: Shape of the sample area (0 = rectangle, 1 = circle).}
 
@@ -41,6 +43,16 @@ Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
 \code{ClipPlot} creates command lines for the FUSION ClipData program and optionally executes them.
 Command lines are designed to clip a circular or square area centered in the \code{(x,y)}.
 }
+\section{Multiple Commands}{
+
+  LTKFunctions generate a separate command for each item when the required parameters are lists.
+  This is useful when you want to use the same command and options but different input data and
+  output files. However, this works only when the switches and options are the same for all
+  commands (not lists). If you try to use a list of switches and/or options and a list of input
+  files, you will produce commands using all sets of switches and/or options for every input
+  file.
+}
+
 \examples{
 \dontrun{
 ClipPlot("*.las", "plot_0001.las", 435895.9, 5669341.4, 0, ground = "small.dtm", height = TRUE)

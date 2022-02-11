@@ -4,7 +4,16 @@
 \alias{dispatchCommand}
 \title{FUSION R command line interface -- Execute command lines or write them to a file.}
 \usage{
-dispatchCommand(cmd, options, required, runCmd, saveCmd, cmdClear, cmdFile)
+dispatchCommand(
+  cmd,
+  options,
+  required,
+  runCmd,
+  saveCmd,
+  cmdClear,
+  cmdFile,
+  comment = NULL
+)
 }
 \arguments{
 \item{cmd}{character string containing the program name and possibly the path.}
@@ -22,6 +31,10 @@ line is written.}
 
 \item{cmdFile}{character string containing the name of the file to which commands
 should be written.}
+
+\item{comment}{character string containing comment to be written to command file before writing
+the actual command. Only used when \code{runCmd = FALSE} and \code{saveCmd = TRUE}. When written,
+there is always a blank line before the comment line in the command file.}
 }
 \value{
 A single integer value or vector of integers. If \code{required} is a vector of
@@ -43,3 +56,4 @@ dispatchCommand("ClipData", "/minht:2.0", "*.las clip1.las",
                  runCmd = FALSE, cmdClear = TRUE, cmdFile = "test.bat")
 }
 }
+\keyword{internal}

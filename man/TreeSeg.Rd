@@ -35,20 +35,22 @@ TreeSeg(
   saveCmd = TRUE,
   cmdFile = NULL,
   cmdClear = FALSE,
-  echoCmd = FALSE
+  echoCmd = FALSE,
+  comment = NULL
 )
 }
 \arguments{
-\item{CHM}{character: Name for canopy height model (PLANS DTM with .dtm extension).
+\item{CHM}{character (\strong{required}): Name for canopy height model (PLANS DTM with .dtm extension).
 May be wildcard or text list file (extension .txt only). This can be a canopy surface
 model if the /ground option is used to specify a ground surface for normalization.}
 
-\item{ht_threshold}{numeric: Minimum height for object segmentation. Portions of the CHM
+\item{ht_threshold}{numeric (\strong{required}): Minimum height for object segmentation. Portions of the CHM
 below this height are not considered in the segmentation.}
 
-\item{outputfile}{character: Base name for output file. Metrics are stored in CSV format with
+\item{outputfile}{character (\strong{required}): Base name for output file. Metrics are stored in CSV format with
 .csv extension. Other outputs are stored in files named using the base name and additional
-descriptive information.}
+descriptive information. If the folder for the output file does not exist, it will be created
+when the function is called even when saving commands to a batch file.}
 
 \item{quiet}{boolean: Suppress all output during the run.}
 
@@ -103,7 +105,8 @@ not used. Used only with the /points option.}
 
 \item{clipfolder}{character: folder name where point files for individual clips are stored. Used
 only with the /points option. If not specified, point files are stored in the same folder with
-other outputs. If the folder does not exist, it will be created.}
+other outputs. If the folder does not exist, it will be created when the function is called even
+when saving commands to a batch file.}
 
 \item{shape}{boolean: Create a shapefile containing the high points and basin metrics.}
 
@@ -132,6 +135,10 @@ line is written.}
 
 \item{echoCmd}{boolean: indicates command line should be displayed.}
 
+\item{comment}{character string containing comment to be written to command file before writing
+the actual command. Only used when \code{runCmd = FALSE} and \code{saveCmd = TRUE}. When written,
+there is always a blank line before the comment line in the command file.}
+
 \item{aspect}{boolean: Calculate surface aspect.}
 }
 \value{
@@ -140,10 +147,30 @@ Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
   if \code{runCmd = FALSE}, return value is the (invisible) command line.
 }
 \description{
-\code{CanopyModel} creates command lines for the FUSION TreeSeg program and optionally executes them.
+\code{TreeSeg} creates command lines for the FUSION TreeSeg program and optionally executes them.
 }
+\section{Multiple Commands}{
+
+  LTKFunctions generate a separate command for each item when the required parameters are lists.
+  This is useful when you want to use the same command and options but different input data and
+  output files. However, this works only when the switches and options are the same for all
+  commands (not lists). If you try to use a list of switches and/or options and a list of input
+  files, you will produce commands using all sets of switches and/or options for every input
+  file.
+}
+
 \examples{
 \dontrun{
 TreeSeg("CHM.dtm", 2.0, "trees.csv")
 }
 }
+\seealso{
+Other LTKFunctions: 
+\code{\link{CanopyModel}()},
+\code{\link{ClipData}()},
+\code{\link{CloudMetrics}()},
+\code{\link{GridMetrics}()},
+\code{\link{GridSurfaceCreate}()},
+\code{\link{fusionwrapr}}
+}
+\concept{LTKFunctions}

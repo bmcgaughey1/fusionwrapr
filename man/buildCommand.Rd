@@ -24,3 +24,4 @@ This is a helper function used in the fusionwrapr package to construct the comma
 buildCommand("ClipData", "/minht:2.0", "*.las clip1.las")
 }
 }
+\keyword{internal}
