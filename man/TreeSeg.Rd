@@ -130,7 +130,7 @@ should be used.}
 \item{cmdFile}{character: contains the name of the file to which commands
 should be written.}
 
-\item{cmdClear}{boolean: indicates file for command should be deleted before the command
+\item{cmdClear}{boolean: indicates file for commands should be deleted (cleared) before the command
 line is written.}
 
 \item{echoCmd}{boolean: indicates command line should be displayed.}
@@ -138,8 +138,6 @@ line is written.}
 \item{comment}{character string containing comment to be written to command file before writing
 the actual command. Only used when \code{runCmd = FALSE} and \code{saveCmd = TRUE}. When written,
 there is always a blank line before the comment line in the command file.}
-
-\item{aspect}{boolean: Calculate surface aspect.}
 }
 \value{
 Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is

@@ -4,10 +4,28 @@
 \alias{verifyFolder}
 \title{FUSION R command line interface -- Verify existence of a folder}
 \usage{
-verifyFolder(folder)
+verifyFolder(
+  folder,
+  runCmd = TRUE,
+  saveCmd = TRUE,
+  cmdFile = NULL,
+  cmdClear = FALSE
+)
 }
 \arguments{
 \item{folder}{folder name}
+
+\item{runCmd}{boolean: indicates command line should be executed. If TRUE, no
+commands will be written to the batch file regardless of the value for \code{saveCmd}.}
+
+\item{saveCmd}{boolean: indicates command line the create the folder(s) should be written to a file. This command will
+create the folder(s) when the command file is run from a command prompt.}
+
+\item{cmdFile}{character: contains the name of the file to which commands
+should be written.}
+
+\item{cmdClear}{boolean: indicates file for commands should be deleted (cleared) before the command
+line is written.}
 }
 \value{
 An (invisible) boolean TRUE, If the folder does not exist and cannot
@@ -15,9 +33,15 @@ An (invisible) boolean TRUE, If the folder does not exist and cannot
 }
 \description{
 This is a helper function used in the fusionwrapr package to verify
-the existence of a folder and create the folder if it does not exist.
-verifyFolder is normally called with a folder extracted using
-\code{dirname()} when an output file is needed for a function.
+the existence of \code{folder} and create the folder(s) if it does not exist.
+\code{verifyFolder} is normally called with a folder extracted using
+\code{dirname()} when an output file is provided to a function. When saving commands
+to a file, a command will be written to create the folder in addition to creating
+the folder. This can make it easier to delete the results from a set of processing
+steps and then re-run them using the command file. When saving to a command file,
+there is no checking to see if the folder already exists. This can result in several
+commands being written to create the same folder. However, the \code{MKDIR} command has
+no bad behavior if the specified folder already exists.
 }
 \examples{
 \dontrun{

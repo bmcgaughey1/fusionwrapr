@@ -23,8 +23,6 @@ must also set \code{cmdFile} either in the global options or in individual comma
 \item{cmdFile}{character: contains the name of the file to which commands should be written.}
 
 \item{echoCmd}{boolean: indicates command line should be displayed.}
-
-\item{cmdClear}{boolean: indicates file for command should be deleted before the command line is written.}
 }
 \value{
 boolean TRUE

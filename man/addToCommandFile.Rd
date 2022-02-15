@@ -20,7 +20,7 @@ with newline characters to add blank lines.}
 should be written.}
 
 \item{cmdClear}{boolean: indicates file for command should be deleted before the command
-line is written. Use this option with caution as it will wipe out the content of the
+line is written. Use this option with caution as it will wipe out the contents of the
 command file.}
 
 \item{comment}{boolean: \code{line} is preceded by "REM" when TRUE, otherwise not.}

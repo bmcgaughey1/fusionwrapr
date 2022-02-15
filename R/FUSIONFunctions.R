@@ -43,11 +43,25 @@ fusionrEnv$areSet <- FALSE
 #' FUSION R command line interface -- Verify existence of a folder
 #'
 #' This is a helper function used in the fusionwrapr package to verify
-#' the existence of a folder and create the folder if it does not exist.
-#' verifyFolder is normally called with a folder extracted using
-#' \code{dirname()} when an output file is needed for a function.
+#' the existence of \code{folder} and create the folder(s) if it does not exist.
+#' \code{verifyFolder} is normally called with a folder extracted using
+#' \code{dirname()} when an output file is provided to a function. When saving commands
+#' to a file, a command will be written to create the folder in addition to creating
+#' the folder. This can make it easier to delete the results from a set of processing
+#' steps and then re-run them using the command file. When saving to a command file,
+#' there is no checking to see if the folder already exists. This can result in several
+#' commands being written to create the same folder. However, the \code{MKDIR} command has
+#' no bad behavior if the specified folder already exists.
 #'
 #' @param folder folder name
+#' @param runCmd boolean: indicates command line should be executed. If TRUE, no
+#'   commands will be written to the batch file regardless of the value for \code{saveCmd}.
+#' @param saveCmd boolean: indicates command line the create the folder(s) should be written to a file. This command will
+#'   create the folder(s) when the command file is run from a command prompt.
+#' @param cmdFile character: contains the name of the file to which commands
+#'   should be written.
+#' @param cmdClear boolean: indicates file for commands should be deleted (cleared) before the command
+#'   line is written.
 #' @return An (invisible) boolean TRUE, If the folder does not exist and cannot
 #'   be created, execution stops.
 #' @examples
@@ -55,7 +69,13 @@ fusionrEnv$areSet <- FALSE
 #' verifyFolder("/test")
 #' }
 #' @export
-verifyFolder <- function(folder) {
+verifyFolder <- function(
+  folder,
+  runCmd = TRUE,
+  saveCmd = TRUE,
+  cmdFile = NULL,
+  cmdClear = FALSE
+) {
   lapply(folder, function(x) {
       if (!base::dir.exists(file.path(x))) {
         if (!base::dir.create(file.path(x), recursive = TRUE)) {
@@ -63,6 +83,11 @@ verifyFolder <- function(folder) {
         } else {
           message("created folder: ", x)
         }
+      }
+      if (!runCmd && saveCmd) {
+        addToCommandFile(paste0("Creating folder: ", file.path(x)), cmdFile = cmdFile, cmdClear = cmdClear)
+        t <- file.path(x)
+        addToCommandFile(paste0("mkdir ", gsub("/", "\\", t, fixed=TRUE), "\n"), cmdFile = cmdFile, cmdClear = cmdClear, comment = FALSE, addLine = FALSE)
       }
     }
   )
@@ -367,7 +392,6 @@ setFUSIONpath <- function(installPath) {
 #' @param saveCmd boolean: indicates command line should be written to a file. If this is \code{TRUE}, you
 #'   must also set \code{cmdFile} either in the global options or in individual command function calls.
 #' @param cmdFile character: contains the name of the file to which commands should be written.
-#' @param cmdClear boolean: indicates file for command should be deleted before the command line is written.
 #' @param echoCmd boolean: indicates command line should be displayed.
 #' @return boolean TRUE
 #' @examples
@@ -430,7 +454,7 @@ resetGlobalCommandOptions <- function() {
 #' @param cmdFile character: contains the name of the file to which commands
 #'   should be written.
 #' @param cmdClear boolean: indicates file for command should be deleted before the command
-#'   line is written. Use this option with caution as it will wipe out the content of the
+#'   line is written. Use this option with caution as it will wipe out the contents of the
 #'   command file.
 #' @param comment boolean: \code{line} is preceded by "REM" when TRUE, otherwise not.
 #' @param addLine boolean: if TRUE, a blank line is added to the command file before writing \code{line}.
@@ -712,18 +736,9 @@ ClipPlot <- function(
 #'   values in output LAS files. These values will override the values
 #'   in the source LAS files. There is rarely any need for the scale
 #'   parameters to be smaller than 0.001.
-#' @param use64bit boolean: indicates 64-bit version of the program
-#'   should be used.
-#' @param runCmd boolean: indicates command line should be executed.
-#' @param saveCmd boolean: indicates command line should be written to a file.
-#' @param cmdFile character: contains the name of the file to which commands
-#'   should be written.
-#' @param cmdClear boolean: indicates file for command should be deleted before the command
-#'   line is written.
-#' @param echoCmd boolean: indicates command line should be displayed.
-#' @param comment character string containing comment to be written to command file before writing
-#'   the actual command. Only used when \code{runCmd = FALSE} and \code{saveCmd = TRUE}. When written,
-#'   there is always a blank line before the comment line in the command file.
+#' @template Use64bit
+#' @template RunSaveOptions
+#' @template Comment
 #' @return Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
 #'   the (invisible) integer value return from the operating system after running the command.
 #'   if \code{runCmd = FALSE}, return value is the (invisible) command line.
@@ -799,7 +814,10 @@ ClipData <- function(
   checkRunSaveFile(runCmd, saveCmd, cmdFile)
 
   # check for folder included in output...will create if it doesn't exist
-  verifyFolder(dirname(samplefile))
+  verifyFolder(dirname(samplefile), runCmd, saveCmd, cmdFile, cmdClear)
+
+  # if we are saving commands to a file, cmdClear will have done its job in the call to verifyFolder
+  cmdClear <- FALSE
 
   # if inputspecifier and samplefile are different lengths, there is some work to do...
   # if length(inputspecifier) > 1 and length(samplefile) == 1, create a list file and use this for a single command line
@@ -956,18 +974,9 @@ ClipData <- function(
 #'   color for the returns. Valid with LAS version 1.2 and newer
 #'   data files that contain RGB information for each return (point
 #'   record types 2 and 3). Valid color values are R, G, or B.
-#' @param use64bit boolean: indicates 64-bit version of the program
-#'   should be used.
-#' @param runCmd boolean: indicates command line should be executed.
-#' @param saveCmd boolean: indicates command line should be written to a file.
-#' @param cmdFile character: contains the name of the file to which commands
-#'   should be written.
-#' @param cmdClear boolean: indicates file for command should be deleted before the command
-#'   line is written.
-#' @param echoCmd boolean: indicates command line should be displayed.
-#' @param comment character string containing comment to be written to command file before writing
-#'   the actual command. Only used when \code{runCmd = FALSE} and \code{saveCmd = TRUE}. When written,
-#'   there is always a blank line before the comment line in the command file.
+#' @template Use64bit
+#' @template RunSaveOptions
+#' @template Comment
 #' @return Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
 #'   the (invisible) integer value return from the operating system after running the command.
 #'   if \code{runCmd = FALSE}, return value is the (invisible) command line.
@@ -1034,7 +1043,10 @@ CloudMetrics <- function(
   checkRunSaveFile(runCmd, saveCmd, cmdFile)
 
   # check for folder included in output...will create if it doesn't exist
-  verifyFolder(dirname(outputfile))
+  verifyFolder(dirname(outputfile), runCmd, saveCmd, cmdFile, cmdClear)
+
+  # if we are saving commands to a file, cmdClear will have done its job in the call to verifyFolder
+  cmdClear <- FALSE
 
   # if inputspecifier and outputfile are different lengths, there are problems
   if (length(inputspecifier) != length(outputfile)) {
@@ -1147,18 +1159,9 @@ CloudMetrics <- function(
 #'   size and the width and height to be multiples of the cell size.
 #' @param smoothfirst boolean: indicating smoothing should occur before median
 #'   filtering. The default is for median filtering to happen before smoothing.
-#' @param use64bit boolean: indicates 64-bit version of the program
-#'   should be used.
-#' @param runCmd boolean: indicates command line should be executed.
-#' @param saveCmd boolean: indicates command line should be written to a file.
-#' @param cmdFile character: contains the name of the file to which commands
-#'   should be written.
-#' @param cmdClear boolean: indicates file for command should be deleted before the command
-#'   line is written.
-#' @param echoCmd boolean: indicates command line should be displayed.
-#' @param comment character string containing comment to be written to command file before writing
-#'   the actual command. Only used when \code{runCmd = FALSE} and \code{saveCmd = TRUE}. When written,
-#'   there is always a blank line before the comment line in the command file.
+#' @template Use64bit
+#' @template RunSaveOptions
+#' @template Comment
 #' @return Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
 #'   the (invisible) integer value return from the operating system after running the command.
 #'   if \code{runCmd = FALSE}, return value is the (invisible) command line.
@@ -1236,7 +1239,10 @@ GridSurfaceCreate <- function(
   checkRunSaveFile(runCmd, saveCmd, cmdFile)
 
   # check for folder included in output...will create if it doesn't exist
-  verifyFolder(dirname(surfacefile))
+  verifyFolder(dirname(surfacefile), runCmd, saveCmd, cmdFile, cmdClear)
+
+  # if we are saving commands to a file, cmdClear will have done its job in the call to verifyFolder
+  cmdClear <- FALSE
 
   # build command line
   cmd <- programName("GridSurfaceCreate", use64bit)
@@ -1412,18 +1418,9 @@ GridSurfaceCreate <- function(
 #' @param topo character: "dist,lat": Compute topographic metrics using the groundfile(s) and output
 #'   them in a separate file. Distance is the cell size for the 3 by
 #'   3 cell analysis area and lat is the latitude (+north, -south).
-#' @param use64bit boolean: indicates 64-bit version of the program
-#'   should be used.
-#' @param runCmd boolean: indicates command line should be executed.
-#' @param saveCmd boolean: indicates command line should be written to a file.
-#' @param cmdFile character: contains the name of the file to which commands
-#'   should be written.
-#' @param cmdClear boolean: indicates file for command should be deleted before the command
-#'   line is written.
-#' @param echoCmd boolean: indicates command line should be displayed.
-#' @param comment character string containing comment to be written to command file before writing
-#'   the actual command. Only used when \code{runCmd = FALSE} and \code{saveCmd = TRUE}. When written,
-#'   there is always a blank line before the comment line in the command file.
+#' @template Use64bit
+#' @template RunSaveOptions
+#' @template Comment
 #' @return Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
 #'   the (invisible) integer value return from the operating system after running the command.
 #'   if \code{runCmd = FALSE}, return value is the (invisible) command line.
@@ -1503,7 +1500,10 @@ GridMetrics <- function(
   checkRunSaveFile(runCmd, saveCmd, cmdFile)
 
   # check for folder included in output...will create if it doesn't exist
-  verifyFolder(dirname(outputfile))
+  verifyFolder(dirname(outputfile), runCmd, saveCmd, cmdFile, cmdClear)
+
+  # if we are saving commands to a file, cmdClear will have done its job in the call to verifyFolder
+  cmdClear <- FALSE
 
   # build command line
   cmd <- programName("GridMetrics", use64bit)
@@ -1642,18 +1642,9 @@ GridMetrics <- function(
 #'   resolution. Only used with the /grid and /gridxy options.
 #' @param smoothfirst boolean: indicating smoothing should occur before median
 #'   filtering. The default is for median filtering to happen before smoothing.
-#' @param use64bit boolean: indicates 64-bit version of the program
-#'   should be used.
-#' @param runCmd boolean: indicates command line should be executed.
-#' @param saveCmd boolean: indicates command line should be written to a file.
-#' @param cmdFile character: contains the name of the file to which commands
-#'   should be written.
-#' @param cmdClear boolean: indicates file for command should be deleted before the command
-#'   line is written.
-#' @param echoCmd boolean: indicates command line should be displayed.
-#' @param comment character string containing comment to be written to command file before writing
-#'   the actual command. Only used when \code{runCmd = FALSE} and \code{saveCmd = TRUE}. When written,
-#'   there is always a blank line before the comment line in the command file.
+#' @template Use64bit
+#' @template RunSaveOptions
+#' @template Comment
 #' @return Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
 #'   the (invisible) integer value return from the operating system after running the command.
 #'   if \code{runCmd = FALSE}, return value is the (invisible) command line.
@@ -1739,7 +1730,10 @@ CanopyModel <- function(
   checkRunSaveFile(runCmd, saveCmd, cmdFile)
 
   # check for folder included in output...will create if it doesn't exist
-  verifyFolder(dirname(surfacefile))
+  verifyFolder(dirname(surfacefile), runCmd, saveCmd, cmdFile, cmdClear)
+
+  # if we are saving commands to a file, cmdClear will have done its job in the call to verifyFolder
+  cmdClear <- FALSE
 
   # build command line
   cmd <- programName("CanopyModel", use64bit)
@@ -1853,7 +1847,6 @@ CanopyModel <- function(
 #' @param segmentpts boolean: Output points for the raster segments. Default is to output points
 #'   for crown polygons when the /shape option is used and for raster segments when /shape is
 #'   not used. Used only with the /points option.
-#' @param aspect boolean: Calculate surface aspect.
 #' @param clipfolder character: folder name where point files for individual clips are stored. Used
 #'   only with the /points option. If not specified, point files are stored in the same folder with
 #'   other outputs. If the folder does not exist, it will be created when the function is called even
@@ -1866,18 +1859,9 @@ CanopyModel <- function(
 #'   (see /points option).
 #' @param projection character: Associate the specified projection file with shapefile and raster
 #'   data products.
-#' @param use64bit boolean: indicates 64-bit version of the program
-#'   should be used.
-#' @param runCmd boolean: indicates command line should be executed.
-#' @param saveCmd boolean: indicates command line should be written to a file.
-#' @param cmdFile character: contains the name of the file to which commands
-#'   should be written.
-#' @param cmdClear boolean: indicates file for command should be deleted before the command
-#'   line is written.
-#' @param echoCmd boolean: indicates command line should be displayed.
-#' @param comment character string containing comment to be written to command file before writing
-#'   the actual command. Only used when \code{runCmd = FALSE} and \code{saveCmd = TRUE}. When written,
-#'   there is always a blank line before the comment line in the command file.
+#' @template Use64bit
+#' @template RunSaveOptions
+#' @template Comment
 #' @return Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
 #'   the (invisible) integer value return from the operating system after running the command.
 #'   if \code{runCmd = FALSE}, return value is the (invisible) command line.
@@ -1943,7 +1927,10 @@ TreeSeg <- function(
   checkRunSaveFile(runCmd, saveCmd, cmdFile)
 
   # check for folder included in output...will create if it doesn't exist
-  verifyFolder(dirname(outputfile))
+  verifyFolder(dirname(outputfile), runCmd, saveCmd, cmdFile, cmdClear)
+
+  # if we are saving commands to a file, cmdClear will have done its job in the call to verifyFolder
+  cmdClear <- FALSE
 
   # check for folder for tree clips...will create if it doesn't exist
   # don't call dirname() because it will strip off the last folder in the path
@@ -1952,7 +1939,7 @@ TreeSeg <- function(
     if (!endsWith(clipfolder, "/"))
       clipfolder <- paste0(clipfolder, "/")
 
-    verifyFolder(clipfolder)
+    verifyFolder(clipfolder, runCmd, saveCmd, cmdFile, cmdClear)
   }
 
   # build command line

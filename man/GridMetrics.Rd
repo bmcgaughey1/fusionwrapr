@@ -212,7 +212,7 @@ should be used.}
 \item{cmdFile}{character: contains the name of the file to which commands
 should be written.}
 
-\item{cmdClear}{boolean: indicates file for command should be deleted before the command
+\item{cmdClear}{boolean: indicates file for commands should be deleted (cleared) before the command
 line is written.}
 
 \item{echoCmd}{boolean: indicates command line should be displayed.}
