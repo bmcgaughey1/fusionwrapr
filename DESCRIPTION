@@ -8,6 +8,8 @@ Description: fusionwrapr provides R functions that construct command lines
     for many of the FUSION command line programs. FUSION is only available
     on Windows platforms, hence fusionwrapr is only operable on Windows
     platforms.
+Imports:
+    lidR
 License: CC0
 Encoding: UTF-8
 LazyData: true

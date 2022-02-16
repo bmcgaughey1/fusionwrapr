@@ -590,6 +590,144 @@ runCommandFile <- function(
   invisible(FALSE)
 }
 
+
+
+# *****************************************************************************
+# Function to read FUSION's LDA point format files and create a data frame or
+# LAS object (from the lidR package)
+# *****************************************************************************
+# ---------- readLDA
+#
+#' FUSION R command line interface -- Read LDA format files and return data frame or LAS-class object
+#'
+#' \code{readLDA} reads point data stored in FUSION's LDA format and returns either a data frame or
+#' a LAS-class object. To create the LAS-class object, you must provide an existing LAS or LAZ
+#' file to provide a template for the LAS header. Typically, this would be a file used to clip the
+#' LDA file using \code{TreeSeg} (this is the only FUSION program that can't output LAS files). The
+#' template file also provides coordinate system information for the LAS-class object.
+#'
+#' When \code{type = "DF"} (default), the return is a data frame containing the following columns:
+#' \enumerate{
+#'   \item x
+#'   \item y
+#'   \item x
+#'   \item pulse: pseudo-pulse number. This is generated using the GPS time when the LDA file is created
+#'   \item return: return number
+#'   \item angle: scan angle rank
+#'   \item intensity: intensity
+#' }
+#'
+#' When \code{type = "LAS"}, the LAS-class object returned by \code{readLDA} is somewhat imperfect.
+#' Many of the attributes for individual points are not populated with valid values because the LDA
+#' format does not have all of the information required to fully populate the point records. In
+#' particular, GPS time,number of returns in the pulse, and classification are not available.
+#' NumberOfReturns for all point records is set to 1 for all point records. This may cause tools
+#' designed to evaluate the validity of LAS data to throw warning since there may be points labeled
+#' as return 2, 3, ... yet the NumberOfReturns will still be 1.
+#'
+#' @param fileName character (\strong{required}): Name of the LDA file containing point data.
+#' @param type character: Desired return type: "DF" for a data frame and "LAS" for LAS-class object.
+#' @param LASTemplate character: File name (including path) for the LAS/LAZ file that will provide a template
+#' for the LAS header. Used only when \code{type = "LAS"}.
+#' @return Return value depends on \code{type}. If \code{type = "DF"}, return value is
+#'   a (invisible) data frame with the columns listed above. If \code{type = "LAS"}, return value is a
+#'   (invisible) LAS-class object compatible with the \strong{lidR} package.
+#' @examples
+#' \dontrun{
+#' pts <- readLDA("points.lda")
+#' las <- readLDA("points.lda", type = "LAS", LASTemplate = "source.las")
+#' }
+#' @export
+readLDA <- function(
+  fileName = NULL,
+  type = "DF",
+  LASTemplate = NULL
+) {
+  # validate parameters
+  if (!isOpt(fileName))
+    stop("You must provide a fileName!!")
+
+  if (type != "DF" && type != "LAS")
+    stop(paste0("Invalid value for type: ", type, " Valid values are \"DF\" or \"LAS\""))
+
+  if (type == "LAS" && is.null(LASTemplate))
+    stop("You must provide a file to serve as a template for the LAS header!!")
+
+  con = file(fileName, open = "rb")
+  Signaturebytes <- readBin(con, "raw", n = 8, size = 1, endian = "little")
+
+  Signature <- readBin(Signaturebytes, "character", size = 8, endian = "little")
+  if (Signature == "LIDARBIN") {
+    readBin(con, "raw", 4) # skip bytes...version major
+    readBin(con, "raw", 4) # skip bytes...version minor
+
+    # read point records...read 36 bytes and parse
+    pts <- readBin(con, "raw", n = 360000000, size = 1, endian = "little", signed = FALSE)
+
+    try(close(con))
+
+    if (length(pts) > 0) {
+      ptCount <- length(pts) / 36
+
+      mat <- matrix(pts, ncol = 36, nrow = ptCount, byrow = TRUE)
+
+      # parse...stole this method from Jacob: https://github.com/jstrunk001/RSForTools/blob/main/R/read_las.R
+      pulse <- readBin(t(mat[, 1:4]), "integer", n = ptCount, size = 4, signed = TRUE, endian = "little")
+      ret <- readBin(t(mat[, 5:8]), "integer", n = ptCount, size = 4, signed = TRUE, endian = "little")
+      x <- readBin(t(mat[, 9:16]), "numeric", n = ptCount, size = 8, signed = TRUE, endian = "little")
+      y <- readBin(t(mat[, 17:24]), "numeric", n = ptCount, size = 8, signed = TRUE, endian = "little")
+      z <- readBin(t(mat[, 25:28]), "numeric", n = ptCount, size = 4, signed = TRUE, endian = "little")
+      angle <- readBin(t(mat[, 29:32]), "numeric", n = ptCount, size = 4, signed = TRUE, endian = "little")
+      intensity <- readBin(t(mat[, 33:36]), "numeric", n = ptCount, size = 4, signed = TRUE, endian = "little")
+
+      if (type == "LAS") {
+        # read header
+        header <- lidR::readLASheader(LASTemplate)
+        data <- data.frame(   X = x
+                              , Y = y
+                              , Z = z
+                              , ReturnNumber = ret
+                              , Intensity = as.integer(intensity)
+                              , ScanAngleRank = as.integer(angle)
+        )
+
+        # build the LAS object
+        las <- lidR::LAS(data, header, check = FALSE)
+        las <- lidR::las_quantize(las, TRUE)
+        las <- lidR::las_update(las)
+
+        # populate data for points...we don't have good values for these attributes
+        las@data$gpstime = 0
+        las@data$NumberOfReturns = 1L
+        las@data$ScanDirectionFlag = 0L
+        las@data$EdgeOfFlightline = 0L
+        las@data$Classification = 0L
+        las@data$Synthetic_flag = FALSE
+        las@data$Keypoint_flag = FALSE
+        las@data$Withheld_flag = FALSE
+        las@data$UserData = 0L
+        las@data$PointSourceID = 0L
+
+        invisible(las)
+      } else {
+        invisible(data.frame(  x = x
+                            , y = y
+                            , z = z
+                            , pulse = pulse
+                            , return = ret
+                            , angle = angle
+                            , intensity = intensity))
+      }
+    }
+  } else {
+    try(close(con))
+
+    cat(fileName, " is not a valid LDA file!!")
+    invisible(NULL)
+  }
+}
+
+
 # *****************************************************************************
 # Super-functions that simplify specific tasks using FUSION command line tools.
 # *****************************************************************************
