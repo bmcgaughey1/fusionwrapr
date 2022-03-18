@@ -18,7 +18,8 @@ writeDTM(
   originY = NULL,
   columnSpacing = NULL,
   rowSpacing = NULL,
-  rotate = TRUE
+  rotate = TRUE,
+  storageFormat = -1
 )
 }
 \arguments{
@@ -64,12 +65,31 @@ will be truncated to 60 characters.}
 
 \item{rotate}{boolean: Flag indicating grid of values needs to be rotated before being written to \code{fileName}. See the
 description of \code{x} for details regarding the expected arrangement of values in the grid.}
+
+\item{storageFormat}{integer: Integer value indicating the numeric type for values stored in the DTM file. The default
+value (-1) indicates that the actual data type is used to dictate the appropriate format. Storage options when \code{storageFormat = -1}
+are 2-byte signed integers for integer values and 4-byte floating point numbers for non-integer values. Possible values
+are: 0: 2-byte signed integers, 1: 4-byte signed integers, 2: 4-byte floating point numbers, and 3: 8-byte floating point numbers.
+Storing floating point values as integers will force truncation of the values.}
 }
 \value{
 Returns an invisible boolean value indicating success (TRUE) or failure (FALSE).
 }
 \description{
-\code{writeDTM} writes FUSION's DTM format files from data contained in a matrix, RasterLayer, or SpatRaster object.
+\code{writeDTM} writes FUSION's DTM format files from data contained in a matrix, RasterLayer, or SpatRaster object. Any NA values
+in the data are converted to a value of -1 indicating areas with invalid data. This means that values must all be
+greater than 0 for use with any of the FUSION tools. While it is possible to store data with negative values, there
+are much better formats for data than FUSION's DTM format.
+}
+\details{
+FUSION DTM format files do not carry any projection information that is useful to other tools. FUSION tools use the minimal
+projection information stored in DTM files to prevent merging of files with different projections or mixing analyses
+using files with different projections. The enforcement for projection-related information is fairly lax in FUSION's
+tools and, while I would like to enhance this information, it is not likely to change.
+
+This function is particularly useful for converting surfaces into the DTM format. A simple test using the raster package
+to read a surface in TIF format and write to the DTM format was over 10 times faster that using gdal_translate to
+convert the TIF file to ASCII raster and then using FUSION's ASCII2DTM program to convert to DTM format.
 }
 \examples{
 \dontrun{

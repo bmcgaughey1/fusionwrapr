@@ -4,7 +4,13 @@
 \alias{readDTM}
 \title{FUSION R command line interface -- Read DTM format files and return a matrix, RasterLayer, or SpatRaster object}
 \usage{
-readDTM(fileName = NULL, type = "matrix", epsg = NULL, crs = NULL)
+readDTM(
+  fileName = NULL,
+  type = "matrix",
+  epsg = NULL,
+  crs = NULL,
+  negativeToNA = TRUE
+)
 }
 \arguments{
 \item{fileName}{character (\strong{required}): Name of the DTM format file containing data to be read.}
@@ -18,6 +24,10 @@ object when \code{type = "rast"}. You can only specify one of \code{epsg} or \co
 
 \item{crs}{character: PROJ.4 type description of a Coordinate Reference System (map projection). You
 can only specify one of \code{epsg} or \code{crs}, not both.}
+
+\item{negativeToNA}{boolean: Replace negative values with NA (TRUE) or leave negative values as is (FALSE). Setting this
+to FALSE to preserve negative values can lead to erroneous values for the minimum value when writing the
+data to a new DTM using \code{writeDTM}.}
 }
 \value{
 Return value depends on \code{type}. If \code{type = "matrix"}, return value is

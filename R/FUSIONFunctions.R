@@ -762,6 +762,9 @@ readLDA <- function(
 #'   object when \code{type = "rast"}. You can only specify one of \code{epsg} or \code{crs}, not both.
 #' @param crs character: PROJ.4 type description of a Coordinate Reference System (map projection). You
 #'   can only specify one of \code{epsg} or \code{crs}, not both.
+#' @param negativeToNA boolean: Replace negative values with NA (TRUE) or leave negative values as is (FALSE). Setting this
+#'   to FALSE to preserve negative values can lead to erroneous values for the minimum value when writing the
+#'   data to a new DTM using \code{writeDTM}.
 #' @return Return value depends on \code{type}. If \code{type = "matrix"}, return value is
 #'   a (invisible) matrix containing the values. If \code{type = "rast"}, return value is a
 #'   (invisible) SpatRaster object compatible with the \strong{terra} package. If \code{type = "header"},
@@ -777,7 +780,8 @@ readDTM <- function(
   fileName = NULL,
   type = "matrix",
   epsg = NULL,
-  crs = NULL
+  crs = NULL,
+  negativeToNA = TRUE
 ) {
   # validate parameters
   if (!isOpt(fileName))
@@ -896,6 +900,9 @@ readDTM <- function(
       # rotate 90 degrees CCW
       mat <- apply(t(mat),2,rev)
 
+      # replace negative values with NA
+      if (negativeToNA) mat[mat < 0] <- NA
+
       if (type == "terra") {
         crs_string <- crs
         if (is.null(crs) && !is.null(epsg)) crs_sting <- paste0("EPSG:", epsg)
@@ -952,7 +959,19 @@ readDTM <- function(
 #
 #' FUSION R command line interface -- Write DTM format files from a matrix, RasterLayer, or SpatRaster object
 #'
-#' \code{writeDTM} writes FUSION's DTM format files from data contained in a matrix, RasterLayer, or SpatRaster object.
+#' \code{writeDTM} writes FUSION's DTM format files from data contained in a matrix, RasterLayer, or SpatRaster object. Any NA values
+#' in the data are converted to a value of -1 indicating areas with invalid data. This means that values must all be
+#' greater than 0 for use with any of the FUSION tools. While it is possible to store data with negative values, there
+#' are much better formats for data than FUSION's DTM format.
+#'
+#' FUSION DTM format files do not carry any projection information that is useful to other tools. FUSION tools use the minimal
+#' projection information stored in DTM files to prevent merging of files with different projections or mixing analyses
+#' using files with different projections. The enforcement for projection-related information is fairly lax in FUSION's
+#' tools and, while I would like to enhance this information, it is not likely to change.
+#'
+#' This function is particularly useful for converting surfaces into the DTM format. A simple test using the raster package
+#' to read a surface in TIF format and write to the DTM format was over 10 times faster that using gdal_translate to
+#' convert the TIF file to ASCII raster and then using FUSION's ASCII2DTM program to convert to DTM format.
 #'
 #' @param x (\strong{required}): data object containing the values to be written to the DTM file. This can be a simple
 #'   matrix, a SpatRaster object, or a SpatialLayer object. Values are assumed to be in rows with the first row and column
@@ -968,6 +987,11 @@ readDTM <- function(
 #' @param rowSpacing numeric (\strong{required when \code{x} is matrix}): Spacing between rows.
 #' @param rotate boolean: Flag indicating grid of values needs to be rotated before being written to \code{fileName}. See the
 #'   description of \code{x} for details regarding the expected arrangement of values in the grid.
+#' @param storageFormat integer: Integer value indicating the numeric type for values stored in the DTM file. The default
+#'   value (-1) indicates that the actual data type is used to dictate the appropriate format. Storage options when \code{storageFormat = -1}
+#'   are 2-byte signed integers for integer values and 4-byte floating point numbers for non-integer values. Possible values
+#'   are: 0: 2-byte signed integers, 1: 4-byte signed integers, 2: 4-byte floating point numbers, and 3: 8-byte floating point numbers.
+#'   Storing floating point values as integers will force truncation of the values.
 #' @return Returns an invisible boolean value indicating success (TRUE) or failure (FALSE).
 #' @examples
 #' \dontrun{
@@ -989,7 +1013,8 @@ writeDTM <- function(
   originY = NULL,
   columnSpacing = NULL,
   rowSpacing = NULL,
-  rotate = TRUE
+  rotate = TRUE,
+  storageFormat = -1
 ) {
   # validate parameters
   if (missing(x))
@@ -997,6 +1022,11 @@ writeDTM <- function(
 
   if (!isOpt(fileName))
     stop("You must provide a fileName!!")
+
+  # check storageFormat: valid range is -1 to 3
+  if (storageFormat < -1 || storageFormat > 3) {
+    stop(paste("Invalid value for storageFormat:", storageFormat, "valid values are -1, 0, 1, 2, and 3"))
+  }
 
   # check the data type
   if (is.matrix(x)) {
@@ -1113,26 +1143,42 @@ writeDTM <- function(
   writeBin(rowSpacing, con, size = 8, endian = "little")
   writeBin(as.integer(columns), con, size = 4, endian = "little")
   writeBin(as.integer(rows), con, size = 4, endian = "little")
-  writeBin(as.integer(xyunits), con, size = 2L, endian = "little")
-  writeBin(as.integer(zunits), con, size = 2L, endian = "little")
-  if (valsInt) {
-    writeBin(0L, con, size = 2L, endian = "little")
+  writeBin(as.integer(xyunits), con, size = 2, endian = "little")
+  writeBin(as.integer(zunits), con, size = 2, endian = "little")
+  if (storageFormat == -1) {
+    if (valsInt) {
+      writeBin(0L, con, size = 2, endian = "little")
+    } else {
+      writeBin(2L, con, size = 2, endian = "little")
+    }
   } else {
-    writeBin(2L, con, size = 2L, endian = "little")
+    writeBin(as.integer(storageFormat), con, size = 2, endian = "little")
   }
-  writeBin(as.integer(coordsys), con, size = 2L, endian = "little")
-  writeBin(as.integer(zone), con, size = 2L, endian = "little")
-  writeBin(as.integer(horizdatum), con, size = 2L, endian = "little")
-  writeBin(as.integer(vertdatum), con, size = 2L, endian = "little")
+  writeBin(as.integer(coordsys), con, size = 2, endian = "little")
+  writeBin(as.integer(zone), con, size = 2, endian = "little")
+  writeBin(as.integer(horizdatum), con, size = 2, endian = "little")
+  writeBin(as.integer(vertdatum), con, size = 2, endian = "little")
 
   # jump to start of data and write values
   seek(con, 200, "start")
 
   # write values
-  if (valsInt) {
-    writeBin(c(t(mat)), con, size = 2, endian = "little")
+  if (storageFormat == -1) {
+    if (valsInt) {
+      writeBin(c(t(mat)), con, size = 2, endian = "little")
+    } else {
+      writeBin(c(t(mat)), con, size = 4, endian = "little")
+    }
   } else {
-    writeBin(c(t(mat)), con, size = 4, endian = "little")
+    if (storageFormat == 0) {
+      writeBin(as.integer(c(t(mat))), con, size = 2, endian = "little")
+    } else if (storageFormat == 1) {
+      writeBin(as.integer(c(t(mat))), con, size = 4, endian = "little")
+    } else if (storageFormat == 2) {
+      writeBin(as.numeric(c(t(mat))), con, size = 4, endian = "little")
+    } else if (storageFormat == 3) {
+      writeBin(as.numeric(c(t(mat))), con, size = 8, endian = "little")
+    }
   }
 
   # close file
