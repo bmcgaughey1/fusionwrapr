@@ -9,7 +9,10 @@ Description: fusionwrapr provides R functions that construct command lines
     on Windows platforms, hence fusionwrapr is only operable on Windows
     platforms.
 Imports:
-    lidR
+    lidR,
+    raster,
+    terra,
+    utils
 License: CC0
 Encoding: UTF-8
 LazyData: true

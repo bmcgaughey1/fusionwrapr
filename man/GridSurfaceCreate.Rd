@@ -192,6 +192,7 @@ Other LTKFunctions:
 \code{\link{ClipData}()},
 \code{\link{CloudMetrics}()},
 \code{\link{GridMetrics}()},
+\code{\link{SurfaceSample}()},
 \code{\link{TreeSeg}()},
 \code{\link{fusionwrapr}}
 }

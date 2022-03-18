@@ -229,6 +229,7 @@ Other LTKFunctions:
 \code{\link{CloudMetrics}()},
 \code{\link{GridMetrics}()},
 \code{\link{GridSurfaceCreate}()},
+\code{\link{SurfaceSample}()},
 \code{\link{TreeSeg}()},
 \code{\link{fusionwrapr}}
 }

@@ -133,7 +133,7 @@ and only returns, L indicates last of many returns.}
 values listed are to be included in the subsample.
 Classification values should be separated by a comma.
 e.g. (2,3,4,5) and can range from 0 to 31.
-If the first character in string is ~, the list is interpretted
+If the first character in string is ~, the list is interpreted
 as the classes you DO NOT want included in the subsample.
 e.g. /class:~2,3 would include all class values EXCEPT 2 and 3.}
 
@@ -214,6 +214,7 @@ Other LTKFunctions:
 \code{\link{CloudMetrics}()},
 \code{\link{GridMetrics}()},
 \code{\link{GridSurfaceCreate}()},
+\code{\link{SurfaceSample}()},
 \code{\link{TreeSeg}()},
 \code{\link{fusionwrapr}}
 }

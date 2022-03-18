@@ -24,6 +24,7 @@ TreeSeg(
   buffer = NULL,
   ground = NULL,
   points = NULL,
+  class = NULL,
   segmentpts = FALSE,
   clipfolder = NULL,
   shape = FALSE,
@@ -99,6 +100,14 @@ file may be wildcard or text list file (extension .txt only).}
 list file (extension .txt only). Points are assigned to individual basins or crown polygons
 and a separate file (in LDA format) is output for each basin or polygon.}
 
+\item{class}{character: "c,c,c,...": LAS files only: Specifies that only points with classification
+values listed are to be included in the subsample.
+Classification values should be separated by a comma.
+e.g. (2,3,4,5) and can range from 0 to 31.
+If the first character in string is ~, the list is interpretted
+as the classes you DO NOT want included in the subsample.
+e.g. /class:~2,3 would include all class values EXCEPT 2 and 3.}
+
 \item{segmentpts}{boolean: Output points for the raster segments. Default is to output points
 for crown polygons when the /shape option is used and for raster segments when /shape is
 not used. Used only with the /points option.}
@@ -169,6 +178,7 @@ Other LTKFunctions:
 \code{\link{CloudMetrics}()},
 \code{\link{GridMetrics}()},
 \code{\link{GridSurfaceCreate}()},
+\code{\link{SurfaceSample}()},
 \code{\link{fusionwrapr}}
 }
 \concept{LTKFunctions}

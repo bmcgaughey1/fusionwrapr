@@ -627,6 +627,8 @@ runCommandFile <- function(
 #'
 #' @param fileName character (\strong{required}): Name of the LDA file containing point data.
 #' @param type character: Desired return type: "DF" for a data frame and "LAS" for LAS-class object.
+#' @param epsg numeric: EPSG code defining the projection for the point data. This is assigned to the LAS-class
+#'   object when \code{type = "LAS"}.
 #' @param LASTemplate character: File name (including path) for the LAS/LAZ file that will provide a template
 #' for the LAS header. Used only when \code{type = "LAS"}.
 #' @return Return value depends on \code{type}. If \code{type = "DF"}, return value is
@@ -637,10 +639,12 @@ runCommandFile <- function(
 #' pts <- readLDA("points.lda")
 #' las <- readLDA("points.lda", type = "LAS", LASTemplate = "source.las")
 #' }
+#' @family helpers
 #' @export
 readLDA <- function(
   fileName = NULL,
   type = "DF",
+  epsg = NULL,
   LASTemplate = NULL
 ) {
   # validate parameters
@@ -661,8 +665,11 @@ readLDA <- function(
     readBin(con, "raw", 4) # skip bytes...version major
     readBin(con, "raw", 4) # skip bytes...version minor
 
-    # read point records...read 36 bytes and parse
-    pts <- readBin(con, "raw", n = 360000000, size = 1, endian = "little", signed = FALSE)
+    # get size of file
+    sz <- file.size(fileName)
+
+    # read point records...read "rest" of file (actually specifying total length of file)
+    pts <- readBin(con, "raw", n = sz, size = 1, endian = "little", signed = FALSE)
 
     try(close(con))
 
@@ -708,6 +715,10 @@ readLDA <- function(
         las@data$UserData = 0L
         las@data$PointSourceID = 0L
 
+        if (!is.null(epsg)) {
+          lidR::epsg(las) <- epsg
+        }
+
         invisible(las)
       } else {
         invisible(data.frame(  x = x
@@ -726,6 +737,419 @@ readLDA <- function(
     invisible(NULL)
   }
 }
+
+# *****************************************************************************
+# Function to read FUSION's DTM format files and create a data frame or
+# raster data object
+# *****************************************************************************
+# ---------- readDTM
+#
+#' FUSION R command line interface -- Read DTM format files and return a matrix, RasterLayer, or SpatRaster object
+#'
+#' \code{readDTM} reads surface and raster data stored in FUSION's DTM format and returns information related
+#' to the DTM.
+#'
+#' When \code{type = "matrix"} (default), the return is a matrix containing the values. Matrix element
+#' [1,1] is the value in upper left corner.
+#'
+#' When \code{type = "rast"}, the return is a SpatRaster object compatible with the terra package.
+#'
+#' @param fileName character (\strong{required}): Name of the DTM format file containing data to be read.
+#' @param type character: Desired return type: "matrix" for data values in a matrix, "terra" for SpatRaster object
+#'   compatible with the terra package, "raster" for a RasterLayer object compatible with the
+#'   raster package, and "header" to return the DTM file header as a data frame.
+#' @param epsg numeric: EPSG code defining the projection for the data. This is assigned to the SpatRaster
+#'   object when \code{type = "rast"}. You can only specify one of \code{epsg} or \code{crs}, not both.
+#' @param crs character: PROJ.4 type description of a Coordinate Reference System (map projection). You
+#'   can only specify one of \code{epsg} or \code{crs}, not both.
+#' @return Return value depends on \code{type}. If \code{type = "matrix"}, return value is
+#'   a (invisible) matrix containing the values. If \code{type = "rast"}, return value is a
+#'   (invisible) SpatRaster object compatible with the \strong{terra} package. If \code{type = "header"},
+#'   return type is a data frame with the header parameters.
+#' @examples
+#' \dontrun{
+#' df <- readDTM("surface.dtm")
+#' dtm <- readLDA("surface.dtm", type = "rast", epsg = 26910)
+#' }
+#' @family helpers
+#' @export
+readDTM <- function(
+  fileName = NULL,
+  type = "matrix",
+  epsg = NULL,
+  crs = NULL
+) {
+  # validate parameters
+  if (!isOpt(fileName))
+    stop("You must provide a fileName!!")
+
+  types <- c("terra", "raster", "header", "matrix")
+
+  if (!(tolower(type) %in% types))
+    stop(paste0("Invalid value for type: ", type, " Valid values are ", toString(types)))
+
+  if (!is.null(epsg) && !is.null(crs))
+    stop("You can only specify one of epsg and crs, not both")
+
+  # open file and read header
+  con = file(fileName, open = "rb")
+  Signaturebytes <- readBin(con, "raw", n = 21, size = 1, endian = "little")
+
+  Signature <- readBin(Signaturebytes, "character", size = 20, endian = "little")
+  if (Signature == "PLANS-PC BINARY .DTM") {
+    Namebytes <- readBin(con, "raw", n = 61, size = 1, endian = "little")
+    Name <- readBin(Namebytes, "character", size = 60, endian = "little")
+
+    version <- readBin(con, "numeric", 1, 4, endian = "little")
+    originX <- readBin(con, "double", 1, 8, endian = "little")
+    originY <- readBin(con, "double", 1, 8, endian = "little")
+    minZ <- readBin(con, "double", 1, 8, endian = "little")
+    maxZ <- readBin(con, "double", 1, 8, endian = "little")
+    rotation <- readBin(con, "double", 1, 8, endian = "little")
+    columnSpacing <- readBin(con, "double", 1, 8, endian = "little")
+    rowSpacing <- readBin(con, "double", 1, 8, endian = "little")
+    columns <- readBin(con, "integer", 1, 4, endian = "little")
+    rows <- readBin(con, "integer", 1, 4, endian = "little")
+    horizontalUnits <- readBin(con, "integer", 1, 2, endian = "little")
+    verticalUnits <- readBin(con, "integer", 1, 2, endian = "little")
+    storageFormat <- readBin(con, "integer", 1, 2, endian = "little")
+
+    if (version >= 2.0) {
+      coordSystem <- readBin(con, "integer", 1, 2, endian = "little")
+      coordZone <- readBin(con, "integer", 1, 2, endian = "little")
+    } else {
+      coordSystem <- 0
+      coordZone <- 0
+    }
+
+    if (version >= 3.0) {
+      horizontalDatum <- readBin(con, "integer", 1, 2, endian = "little")
+      verticalDatum <- readBin(con, "integer", 1, 2, endian = "little")
+    } else {
+      horizontalDatum <- 0
+      verticalDatum <- 0
+    }
+
+    if (version > 3.0) {
+      bias <- readBin(con, "double", 1, 8, endian = "little")
+    } else {
+      bias <- 0.0
+    }
+
+    # if just returning the header, close the file and form the return data frame
+    if (type == "header") {
+      try(close(con))
+
+      return(invisible(data.frame(Name
+                           , version
+                           , originX
+                           , originY
+                           , minZ
+                           , maxZ
+                           , rotation
+                           , columnSpacing
+                           , rowSpacing
+                           , columns
+                           , rows
+                           , horizontalUnits
+                           , verticalUnits
+                           , storageFormat
+                           , coordSystem
+                           , coordZone
+                           , horizontalDatum
+                           , verticalDatum
+                           , bias
+                           )
+                )
+      )
+    }
+
+    # jump to start of data values
+    seek(con, 200, "start")
+
+    # storage format:
+    #   0 = 2-byte integer
+    #   1 = 4-byte integer
+    #   2 = 4-byte real number
+    #   3 = 8-byte real number
+
+    # read values...try reading entire array of values
+    if (storageFormat == 0) {
+      values <- readBin(con, "integer", n = columns * rows, size = 2, endian = "little", signed = TRUE)
+    } else if (storageFormat == 1) {
+      values <- readBin(con, "integer", n = columns * rows, size = 4, endian = "little", signed = TRUE)
+    } else if (storageFormat == 2) {
+      values <- readBin(con, "numeric", n = columns * rows, size = 4, endian = "little", signed = TRUE)
+    } else if (storageFormat == 3) {
+      values <- readBin(con, "double", n = columns * rows, size = 8, endian = "little", signed = TRUE)
+    }
+
+    # close the file
+    try(close(con))
+
+    if (length(values) > 0) {
+      # we really want to parse this efficiently and then rotate the array so [1,1] is upper left corner
+      # and values go across rows
+      # found this: https://stackoverflow.com/questions/16496210/rotate-a-matrix-in-r-by-90-degrees-clockwise
+      mat <- matrix(values, ncol = rows, nrow = columns, byrow = TRUE)
+
+      # rotate 90 degrees CCW
+      mat <- apply(t(mat),2,rev)
+
+      if (type == "terra") {
+        crs_string <- crs
+        if (is.null(crs) && !is.null(epsg)) crs_sting <- paste0("EPSG:", epsg)
+
+        if (is.null(crs_string)) {
+          sr <- terra::rast(mat
+                     , extent = terra::ext(originX, originX + columnSpacing * columns, originY, originY + rowSpacing * rows)
+          )
+        } else {
+          sr <- terra::rast(mat
+                     , crs = crs_string
+                     , extent = terra::ext(originX, originX + columnSpacing * columns, originY, originY + rowSpacing * rows)
+          )
+        }
+
+        return(invisible(sr))
+      } else if (type == "raster") {
+        crs_string <- crs
+        if (is.null(crs) && !is.null(epsg)) crs_sting <- paste0("EPSG:", epsg)
+
+        if (is.null(crs_string)) {
+          sr <- raster::raster(mat
+                     , xmn = originX
+                     , xmx = originX + columnSpacing * columns
+                     , ymn = originY
+                     , ymx = originY + rowSpacing * rows
+          )
+        } else {
+          sr <- raster::raster(mat
+                     , crs = crs_string
+                     , xmn = originX
+                     , xmx = originX + columnSpacing * columns
+                     , ymn = originY
+                     , ymx = originY + rowSpacing * rows
+          )
+        }
+
+        return(invisible(sr))
+      } else {
+        return(invisible(mat))
+      }
+    }
+  } else {
+    try(close(con))
+
+    stop(paste0(fileName, " is not a valid DTM file!!"))
+  }
+  return(invisible(NULL))
+}
+
+# function to write a DTM format file
+# writeDTM
+# ---------- writeDTM
+#
+#' FUSION R command line interface -- Write DTM format files from a matrix, RasterLayer, or SpatRaster object
+#'
+#' \code{writeDTM} writes FUSION's DTM format files from data contained in a matrix, RasterLayer, or SpatRaster object.
+#'
+#' @param x (\strong{required}): data object containing the values to be written to the DTM file. This can be a simple
+#'   matrix, a SpatRaster object, or a SpatialLayer object. Values are assumed to be in rows with the first row and column
+#'   in the upper left corner. Use \code{rotate = FALSE} if values are in columns with the first column and row in the
+#'   lower left corner (same arrangement as FUSION's DTM files).
+#' @param fileName character (\strong{required}): Name for the DTM format file.
+#' @param description character: Descriptive name for the DTM. Default is "DTM written by fusionwrapr R package". Length
+#'   will be truncated to 60 characters.
+#' @template CoordInfo
+#' @param originX numeric (\strong{required when \code{x} is matrix}): X value for origin (lower left point in \code{x}).
+#' @param originY numeric (\strong{required when \code{x} is matrix}): Y value for origin (lower left point in \code{x}).
+#' @param columnSpacing numeric (\strong{required when \code{x} is matrix}): Spacing between columns.
+#' @param rowSpacing numeric (\strong{required when \code{x} is matrix}): Spacing between rows.
+#' @param rotate boolean: Flag indicating grid of values needs to be rotated before being written to \code{fileName}. See the
+#'   description of \code{x} for details regarding the expected arrangement of values in the grid.
+#' @return Returns an invisible boolean value indicating success (TRUE) or failure (FALSE).
+#' @examples
+#' \dontrun{
+#' writeDTM(rast, "test.dtm")
+#' }
+#' @family helpers
+#' @export
+writeDTM <- function(
+  x,
+  fileName = NULL,
+  description = "DTM written by fusionwrapr R package",
+  xyunits = NULL,
+  zunits = NULL,
+  coordsys = NULL,
+  zone = NULL,
+  horizdatum = NULL,
+  vertdatum = NULL,
+  originX = NULL,
+  originY = NULL,
+  columnSpacing = NULL,
+  rowSpacing = NULL,
+  rotate = TRUE
+) {
+  # validate parameters
+  if (missing(x))
+    stop("You must provide data to write!!")
+
+  if (!isOpt(fileName))
+    stop("You must provide a fileName!!")
+
+  # check the data type
+  if (is.matrix(x)) {
+    type <- "matrix"
+
+    columns <- ncol(x)
+    rows <- nrow(x)
+
+        if (!isOpt(originX)
+        || !isOpt(originY)
+        || !isOpt(columnSpacing)
+        || !isOpt(rowSpacing)
+        || !isOpt(xyunits)
+        || !isOpt(zunits)
+        || !isOpt(coordsys)
+        || !isOpt(zone)
+        || !isOpt(horizdatum)
+        || !isOpt(vertdatum)
+    ) {
+      stop("Missing required parameters for matrix: originX, originY, columnSpacing, rowSpacing, xyunits, zunits, coordsys, zone, horizdatum, vertdatum")
+    }
+
+    valsInt <- TRUE
+    if (typeof(x) == "double")
+      valsInt <- FALSE
+  } else if (class(x)[[1]] == "SpatRaster") {
+    type <- "terra"
+
+    originX <- terra::xmin(x)
+    originY <- terra::ymin(x)
+    columnSpacing <- terra::xres(x)
+    rowSpacing <- terra::yres(x)
+    columns <- ncol(x)
+    rows <- nrow(x)
+
+    if (!isOpt(xyunits)
+        || !isOpt(zunits)
+        || !isOpt(coordsys)
+        || !isOpt(zone)
+        || !isOpt(horizdatum)
+        || !isOpt(vertdatum)
+    ) {
+      stop("Missing required parameters for SpatRaster: xyunits, zunits, coordsys, zone, horizdatum, vertdatum")
+    }
+
+    valsInt <- terra::is.int(x)
+  } else if (class(x)[[1]] == "RasterLayer") {
+    type <- "raster"
+
+    originX <- raster::extent(x)[1]
+    originY <- raster::extent(x)[3]
+    columnSpacing <- raster::xres(x)
+    rowSpacing <- raster::yres(x)
+    columns <- x@ncols
+    rows <- x@nrows
+
+    if (!isOpt(xyunits)
+        || !isOpt(zunits)
+        || !isOpt(coordsys)
+        || !isOpt(zone)
+        || !isOpt(horizdatum)
+        || !isOpt(vertdatum)
+    ) {
+      stop("Missing required parameters for RasterLayer: xyunits, zunits, coordsys, zone, horizdatum, vertdatum")
+    }
+
+    valsInt <- TRUE
+    if (substr(raster::dataType(x), 1, 1) == "F")
+      valsInt <- FALSE
+
+    # check for top to bottom arrangement
+    # if (!x@toptobottom)
+    #   stop("RasterLayer must be arranged top to bottom!!")
+  }
+
+  if (type == "matrix") {
+    mat <- x
+  } else if (type == "terra") {
+    mat <- terra::as.matrix(x, wide = TRUE)
+  } else if (type == "raster") {
+    mat <- raster::as.matrix(x)
+  }
+
+  # get min value...special care needed to omit NA
+  minZ <- min(mat[!is.na(mat)])
+
+  # convert NA to -1...anything below 0 is considered NODATA in DTM format
+  mat[is.na(mat)] <- -1
+
+  if (rotate) {
+    # rotate matrix
+    mat <- t(apply(mat, 2, rev))
+  }
+
+  # truncate description
+  description <- substr(description, 1, 60)
+
+  # check for folder for output file
+  verifyFolder(dirname(fileName), runCmd = FALSE, saveCmd = FALSE)
+
+  # open file and write header
+  con = file(fileName, open = "wb")
+  writeBin("PLANS-PC BINARY .DTM", con, endian = "little")
+  writeBin(description, con, endian = "little")
+  seek(con, 82, "start")
+
+  writeBin(3.0, con, size = 4, endian = "little")
+  writeBin(originX, con, size = 8, endian = "little")
+  writeBin(originY, con, size = 8, endian = "little")
+  writeBin(minZ, con, size = 8, endian = "little")
+  writeBin(max(mat), con, size = 8, endian = "little")
+  writeBin(0.0, con, size = 8, endian = "little")
+  writeBin(columnSpacing, con, size = 8, endian = "little")
+  writeBin(rowSpacing, con, size = 8, endian = "little")
+  writeBin(as.integer(columns), con, size = 4, endian = "little")
+  writeBin(as.integer(rows), con, size = 4, endian = "little")
+  writeBin(as.integer(xyunits), con, size = 2L, endian = "little")
+  writeBin(as.integer(zunits), con, size = 2L, endian = "little")
+  if (valsInt) {
+    writeBin(0L, con, size = 2L, endian = "little")
+  } else {
+    writeBin(2L, con, size = 2L, endian = "little")
+  }
+  writeBin(as.integer(coordsys), con, size = 2L, endian = "little")
+  writeBin(as.integer(zone), con, size = 2L, endian = "little")
+  writeBin(as.integer(horizdatum), con, size = 2L, endian = "little")
+  writeBin(as.integer(vertdatum), con, size = 2L, endian = "little")
+
+  # jump to start of data and write values
+  seek(con, 200, "start")
+
+  # write values
+  if (valsInt) {
+    writeBin(c(t(mat)), con, size = 2, endian = "little")
+  } else {
+    writeBin(c(t(mat)), con, size = 4, endian = "little")
+  }
+
+  # close file
+  try(close(con))
+
+  # return
+  return(invisible(TRUE))
+}
+
+
+
+
+
+
+
+
+
 
 
 # *****************************************************************************
@@ -791,6 +1215,73 @@ ClipPlot <- function(
   )
 }
 
+# ---------- GetSurfaceValues
+#
+#' FUSION R command line interface -- Super-function to run SurfaceSample to get interpolated values from surface for (X,Y) locations.
+#'
+#' \code{GetSurfaceValues} builds an input file with the identifier (optional), X, and Y and runs SurfaceSample
+#' to interpolate a value from the specified surface. Output is a CSV file with the value.
+#'
+#' @template MultipleCommands
+#'
+#' @param df data frame containing columns for the identifier (optional), X, and Y.
+#' @param xLabel character: Label for the column containing the X value.
+#' @param yLabel character: Label for the column containing the Y value.
+#' @param idLabel character: Label for the new column in \code{df} containing the surface value.
+#' @param surfaceFile character: Name for the input surface files (PLANS DTM format). \code{surfacefile} may
+#'   be a wildcard or text list file (extension .txt).
+#' @return Returns a dataframe with an additional column containing the sampled surface values. If the
+#'   \code{surfacefile} does not cover the location or contains invalid data, values for locations will be -1.0.
+#' @examples
+#' \dontrun{
+#' GetSurfaceValues(df, "X", "Y", "ground.dtm")
+#' }
+#' @export
+GetSurfaceValues <- function(
+  df,
+  xLabel = "X",
+  yLabel = "Y",
+  idLabel = "Value",
+  surfaceFile = NULL
+) {
+  # check parameters
+  err <- FALSE
+  if (!is.data.frame(df)) {
+    message("df is not a data frame")
+    err <- TRUE
+  } else {
+    # check column labels
+    if (!(xLabel %in% colnames(df))) {
+      message(paste("No column named", xLabel, "in data frame"))
+      err <- TRUE
+    }
+    if (!(yLabel %in% colnames(df))) {
+      message(paste("No column named", yLabel, "in data frame"))
+      err <- TRUE
+    }
+  }
+  if (err) stop()
+
+  # build new data frame for input and write to temp file
+  tdf <- data.frame(X = df[, xLabel], Y = df[, yLabel])
+  tFile <- tempfile()
+  utils::write.csv(tdf, tFile, row.names = FALSE)
+
+  # call SurfaceSample to get surface values
+  outFile <- tempfile()
+  SurfaceSample(surfaceFile, tFile, outFile, verbose = TRUE)
+
+  # read output file and merge into original data frame
+  tdf <- utils::read.csv(outFile)
+  df[[idLabel]] <- tdf[, 3]
+
+  # delete files
+  #unlink(tFile)
+  #unlink(outFile)
+
+  # return original data frame with new column
+  return(df)
+}
 
 
 # *****************************************************************************
@@ -850,7 +1341,7 @@ ClipPlot <- function(
 #'   values listed are to be included in the subsample.
 #'   Classification values should be separated by a comma.
 #'   e.g. (2,3,4,5) and can range from 0 to 31.
-#'   If the first character in string is ~, the list is interpretted
+#'   If the first character in string is ~, the list is interpreted
 #'   as the classes you DO NOT want included in the subsample.
 #'   e.g. /class:~2,3 would include all class values EXCEPT 2 and 3.
 #' @param ignoreoverlap boolean: Ignore points with the overlap flag set (LAS V1.4+ format).
@@ -1982,6 +2473,13 @@ CanopyModel <- function(
 #' @param points character: LIDAR point data file(s) in LDA or LAS format. May be wildcard or text
 #'   list file (extension .txt only). Points are assigned to individual basins or crown polygons
 #'   and a separate file (in LDA format) is output for each basin or polygon.
+#' @param class character: "c,c,c,...": LAS files only: Specifies that only points with classification
+#'   values listed are to be included in the subsample.
+#'   Classification values should be separated by a comma.
+#'   e.g. (2,3,4,5) and can range from 0 to 31.
+#'   If the first character in string is ~, the list is interpretted
+#'   as the classes you DO NOT want included in the subsample.
+#'   e.g. /class:~2,3 would include all class values EXCEPT 2 and 3.
 #' @param segmentpts boolean: Output points for the raster segments. Default is to output points
 #'   for crown polygons when the /shape option is used and for raster segments when /shape is
 #'   not used. Used only with the /points option.
@@ -2029,6 +2527,7 @@ TreeSeg <- function(
   buffer = NULL,
   ground = NULL,
   points = NULL,
+  class = NULL,
   segmentpts = FALSE,
   clipfolder = NULL,
   shape = FALSE,
@@ -2111,6 +2610,7 @@ TreeSeg <- function(
   options <- addOption(options, buffer)
   options <- addOption(options, ground, TRUE)
   options <- addOption(options, points, TRUE)
+  options <- addOption(options, class)
   options <- addOption(options, clipfolder, TRUE)
   options <- addOption(options, htmultiplier)
   options <- addOption(options, projection)
@@ -2118,7 +2618,150 @@ TreeSeg <- function(
   # deal with required parameters...some may have defaults
   required <- addRequired(required, CHM, TRUE)
   required <- addRequired(required, ht_threshold)
-  required <- addRequired(required, outputfile)
+  required <- addRequired(required, outputfile, TRUE)
+
+  echoCommand(cmd, options, required, echoCmd)
+
+  ret <- dispatchCommand(cmd, options, required, runCmd, saveCmd, cmdClear, cmdFile, comment)
+
+  if (runCmd) {
+    invisible(ret)
+  } else {
+    invisible(buildCommand(cmd, options, required))
+  }
+}
+
+# SurfaceSample
+# ---------- SurfaceSample
+#
+#' FUSION R command line interface -- Function to interpolate surface values for XY locations.
+#'
+#' \code{SurfaceSample} creates command lines for the FUSION SurfaceSample program and optionally executes them.
+#'
+#' @template MultipleCommands
+#'
+#' @param surfacefile character (\strong{required}): Name for input surface file (PLANS DTM with .dtm extension).
+#'   May be wildcard or text list file (extension .txt only).
+#' @param inputfile character (\strong{required}):  Name of file containing XY locations (space or
+#'   comma delimited). If \code{pattern} is used with \code{type 3}, the \code{inputfile}
+#'   should contain two coordinate pairs that specify the endpoints of the line. If \code{id = TRUE}, the
+#'   \code{inputfile} should contain a point identifier in the first column.
+#' @param outputfile character (\strong{required}): Name for the output ASCII CSV file.
+#' @template StandardOptions
+#' @param pattern character: "type,p1,p2,p3": Generate a test pattern of sample points centered on the XY
+#'   location from the \code{inputfile}. Pattern type 1 is a radial network of \code{p1} lines that are at
+#'   least \code{p2} long with sample points every \code{p3} units. The first radial is at 3 o'clock. Radials
+#'   are generated in counter-clockwise order. Pattern type 2 is a radial network of \code{p1} lines that are at
+#'   least \code{p2} long with sample points every \code{p3} units ON AVERAGE. The sample point spacing decreases
+#'   as the distance from the XY location increases to provide sample point locations that represent a uniform
+#'   area The first radial is at 3 o'clock. Radials are generated in counter-clockwise order. Pattern type 3
+#'   expects two coordinate pairs in the input data. The pairs specify the endpoints of a line. Lines with points
+#'   spaced \code{p1} units apart are created and written to the output.
+#' @param topo character: "dist,lat": Compute solar radiation index (SRI) as defined in: Keating, K.
+#'   A.,P. J. P. Gogan, J. M. Vore, and L. R. Irby. 2007. A simple solar radiation index for
+#'   wildlife habitat studies. Journal of Wildlife Management 71(4):1344-1348. Algorithm uses a 3-
+#'   by 3-cell grid with cells that are \code{dist} by \code{dist} units to compute topographic
+#'   attributes. Latitude values (\code{lat}) are in degrees with north positive and south negative.
+#'   Output from this option includes slope, aspect, SRI, and other topographic indices. The range
+#'   for SRI is 0.0 to 2.0 (differs from the -1.0 to 1.0 range in Keating et al. 2007).
+#' @param noheader boolean: Suppress the header line in the output file. This option is useful when you want
+#'   to use PDQ to view the outputfile.
+#' @param novoid boolean: Suppress output for XY sample points outside the surface extent or for points with
+#'   invalid surface elevations.
+#' @param id boolean: Read a point identifier from the first field of each line from the
+#'   \code{inputfile} and output it as the first field of the \code{outputfile}. If \code{id} is
+#'   used with pattern, a separate output file is created for each point in the \code{inputfile}.
+#'   Output files are named using \code{outputfile} as the base name with the point identifier
+#'   appended to the filename. Even when \code{inputfile} contains a single point, the
+#'   \code{outputfile} name is modified to reflect the point identifier.
+#' @template RunSaveOptions
+#' @template Comment
+#' @return Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
+#'   the (invisible) integer value return from the operating system after running the command.
+#'   if \code{runCmd = FALSE}, return value is the (invisible) command line.
+#' @examples
+#' \dontrun{
+#' SurfaceSample("ground.dtm", "in.csv", "out.csv")
+#' }
+#' @family LTKFunctions
+#' @export
+SurfaceSample <- function(
+  surfacefile = NULL,
+  inputfile = NULL,
+  outputfile = NULL,
+  quiet = FALSE,
+  verbose = FALSE,
+  version = FALSE,
+  newlog = FALSE,
+  log = NULL,
+  locale = FALSE,
+  nolaszipdll = FALSE,
+  pattern = NULL,
+  topo = NULL,
+  noheader = FALSE,
+  novoid = FALSE,
+  id = NULL,
+  runCmd = TRUE,
+  saveCmd = TRUE,
+  cmdFile = NULL,
+  cmdClear = FALSE,
+  echoCmd = FALSE,
+  comment = NULL
+) {
+  # check for required options
+  if (!isOpt(surfacefile)
+      || !isOpt(inputfile)
+      || !isOpt(outputfile)
+  ) {
+    stop("Missing required parameters: surfacefile, inputfile, outputfile")
+  }
+
+  # use the global variables to set command dispatch options...global options
+  # are only used if the corresponding option was not passed to the function
+  if (fusionrEnv$areSet) {
+    if (missing(runCmd)) runCmd <- fusionrEnv$runCmd
+    if (missing(saveCmd)) saveCmd <- fusionrEnv$saveCmd
+    if (missing(cmdFile)) cmdFile <- fusionrEnv$cmdFile
+    if (missing(echoCmd)) echoCmd <- fusionrEnv$echoCmd
+  }
+
+  # check for option to run command...if FALSE, check for command file name
+  checkRunSaveFile(runCmd, saveCmd, cmdFile)
+
+  # check for folder included in output...will create if it doesn't exist
+  verifyFolder(dirname(outputfile), runCmd, saveCmd, cmdFile, cmdClear)
+
+  # if we are saving commands to a file, cmdClear will have done its job in the call to verifyFolder
+  cmdClear <- FALSE
+
+  # build command line
+  cmd <- programName("SurfaceSample", FALSE)
+
+  options <- ""
+  required <- ""
+
+  # deal with switches true/false...
+  # "standard" options
+  options <- addSwitch(options, quiet)
+  options <- addSwitch(options, verbose)
+  options <- addSwitch(options, version)
+  options <- addSwitch(options, newlog)
+  options <- addSwitch(options, locale)
+  options <- addSwitch(options, nolaszipdll)
+  options <- addOption(options, log, TRUE)
+
+  # program-specific options
+  options <- addSwitch(options, noheader)
+  options <- addSwitch(options, novoid)
+
+  # deal with options...
+  options <- addOption(options, pattern)
+  options <- addOption(options, topo)
+
+  # deal with required parameters...some may have defaults
+  required <- addRequired(required, surfacefile, TRUE)
+  required <- addRequired(required, inputfile, TRUE)
+  required <- addRequired(required, outputfile, TRUE)
 
   echoCommand(cmd, options, required, echoCmd)
 

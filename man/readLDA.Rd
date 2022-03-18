@@ -4,12 +4,15 @@
 \alias{readLDA}
 \title{FUSION R command line interface -- Read LDA format files and return data frame or LAS-class object}
 \usage{
-readLDA(fileName = NULL, type = "DF", LASTemplate = NULL)
+readLDA(fileName = NULL, type = "DF", epsg = NULL, LASTemplate = NULL)
 }
 \arguments{
 \item{fileName}{character (\strong{required}): Name of the LDA file containing point data.}
 
 \item{type}{character: Desired return type: "DF" for a data frame and "LAS" for LAS-class object.}
+
+\item{epsg}{numeric: EPSG code defining the projection for the point data. This is assigned to the LAS-class
+object when \code{type = "LAS"}.}
 
 \item{LASTemplate}{character: File name (including path) for the LAS/LAZ file that will provide a template
 for the LAS header. Used only when \code{type = "LAS"}.}
@@ -52,3 +55,9 @@ pts <- readLDA("points.lda")
 las <- readLDA("points.lda", type = "LAS", LASTemplate = "source.las")
 }
 }
+\seealso{
+Other helpers: 
+\code{\link{readDTM}()},
+\code{\link{writeDTM}()}
+}
+\concept{helpers}
