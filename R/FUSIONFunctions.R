@@ -49,9 +49,10 @@ fusionrEnv$areSet <- FALSE
 #' to a file, a command will be written to create the folder in addition to creating
 #' the folder. This can make it easier to delete the results from a set of processing
 #' steps and then re-run them using the command file. When saving to a command file,
-#' there is no checking to see if the folder already exists. This can result in several
-#' commands being written to create the same folder. However, the \code{MKDIR} command has
-#' no bad behavior if the specified folder already exists.
+#' there is checking to see if the folder already exists. This prevents multiple attempts
+#' to create the same folder and any associated error or warning messages. In addition,
+#' when saving to a command file, the path is enclosed in quotes to prevent problems
+#' when the folder names contain spaces.
 #'
 #' @param folder folder name
 #' @param runCmd boolean: indicates command line should be executed. If TRUE, no
@@ -87,7 +88,17 @@ verifyFolder <- function(
       if (!runCmd && saveCmd) {
         addToCommandFile(paste0("Creating folder: ", file.path(x)), cmdFile = cmdFile, cmdClear = cmdClear)
         t <- file.path(x)
-        addToCommandFile(paste0("mkdir ", gsub("/", "\\", t, fixed=TRUE), "\n"), cmdFile = cmdFile, cmdClear = cmdClear, comment = FALSE, addLine = FALSE)
+        addToCommandFile(paste0("IF NOT EXIST "
+                                , shQuote(gsub("/", "\\", t, fixed=TRUE))
+                                , " mkdir "
+                                , shQuote(gsub("/", "\\", t, fixed=TRUE))
+                                , "\n"
+                                )
+                         , cmdFile = cmdFile
+                         , cmdClear = cmdClear
+                         , comment = FALSE
+                         , addLine = FALSE
+                         )
       }
     }
   )
