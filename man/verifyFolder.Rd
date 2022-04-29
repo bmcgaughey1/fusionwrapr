@@ -39,9 +39,10 @@ the existence of \code{folder} and create the folder(s) if it does not exist.
 to a file, a command will be written to create the folder in addition to creating
 the folder. This can make it easier to delete the results from a set of processing
 steps and then re-run them using the command file. When saving to a command file,
-there is no checking to see if the folder already exists. This can result in several
-commands being written to create the same folder. However, the \code{MKDIR} command has
-no bad behavior if the specified folder already exists.
+there is checking to see if the folder already exists. This prevents multiple attempts
+to create the same folder and any associated error or warning messages. In addition,
+when saving to a command file, the path is enclosed in quotes to prevent problems
+when the folder names contain spaces.
 }
 \examples{
 \dontrun{

@@ -19,21 +19,24 @@ readDTM(
 compatible with the terra package, "raster" for a RasterLayer object compatible with the
 raster package, and "header" to return the DTM file header as a data frame.}
 
-\item{epsg}{numeric: EPSG code defining the projection for the data. This is assigned to the SpatRaster
-object when \code{type = "rast"}. You can only specify one of \code{epsg} or \code{crs}, not both.}
+\item{epsg}{numeric: EPSG code defining the projection for the data. This is assigned to the
+SpatRaster object when \code{type = "terra"} or the RasterLayer object when \code{type =
+"raster"}. You can only specify one of \code{epsg} or \code{crs}, not both.}
 
-\item{crs}{character: PROJ.4 type description of a Coordinate Reference System (map projection). You
-can only specify one of \code{epsg} or \code{crs}, not both.}
+\item{crs}{character: PROJ.4 type description of a Coordinate Reference System (map projection).
+You can only specify one of \code{epsg} or \code{crs}, not both.}
 
-\item{negativeToNA}{boolean: Replace negative values with NA (TRUE) or leave negative values as is (FALSE). Setting this
+\item{negativeToNA}{boolean: Replace negative values with NA (TRUE) or leave negative values as
+is (FALSE). Setting this
 to FALSE to preserve negative values can lead to erroneous values for the minimum value when writing the
 data to a new DTM using \code{writeDTM}.}
 }
 \value{
-Return value depends on \code{type}. If \code{type = "matrix"}, return value is
-  a (invisible) matrix containing the values. If \code{type = "rast"}, return value is a
-  (invisible) SpatRaster object compatible with the \strong{terra} package. If \code{type = "header"},
-  return type is a data frame with the header parameters.
+Return value depends on \code{type}. If \code{type = "matrix"}, return value is a
+  (invisible) matrix containing the values. If \code{type = "terra"}, return value is a
+  (invisible) SpatRaster object compatible with the \strong{terra} package. If \code{type =
+  "raster"}, return value is a (invisible) RasterLayer object compatible with the \strong{raster}
+  package. If \code{type = "header"}, return type is a data frame with the header parameters.
 }
 \description{
 \code{readDTM} reads surface and raster data stored in FUSION's DTM format and returns information related
@@ -43,12 +46,14 @@ to the DTM.
 When \code{type = "matrix"} (default), the return is a matrix containing the values. Matrix element
 [1,1] is the value in upper left corner.
 
-When \code{type = "rast"}, the return is a SpatRaster object compatible with the terra package.
+When \code{type = "terra"}, the return is a SpatRaster object compatible with the terra package.
+
+When \code{type = "raster"}, the return is a RasterLayer object compatible with the raster package.
 }
 \examples{
 \dontrun{
 df <- readDTM("surface.dtm")
-dtm <- readLDA("surface.dtm", type = "rast", epsg = 26910)
+dtm <- readLDA("surface.dtm", type = "raster", epsg = 26910)
 }
 }
 \seealso{
