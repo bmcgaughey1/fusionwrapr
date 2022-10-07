@@ -15,6 +15,7 @@ TreeSeg(
   log = NULL,
   locale = FALSE,
   nolaszipdll = FALSE,
+  skipfilecheck = FALSE,
   height = FALSE,
   ptheight = FALSE,
   maxht = NULL,
@@ -69,6 +70,10 @@ formats (e.g. use a comma for the decimal separator).}
 \item{nolaszipdll}{boolean: Suppress the use of the LASzip dll (c) Martin Isenburg...
 removes support for compressed LAS (LAZ) files. This option
 is only useful for programs that read or write point files.}
+
+\item{skipfilecheck}{boolean: Skip logic that checks for valid point files and removes those that are invalid
+prior to the start of point processing. This option is designed to overcome some limitations with windows
+and wildcard processing. This option is only useful for programs that read point data.}
 
 \item{height}{boolean: Normalize canopy surface model(s) using ground model(s).}
 
@@ -173,11 +178,13 @@ TreeSeg("CHM.dtm", 2.0, "trees.csv")
 }
 \seealso{
 Other LTKFunctions: 
+\code{\link{CanopyMaxima}()},
 \code{\link{CanopyModel}()},
 \code{\link{ClipData}()},
 \code{\link{CloudMetrics}()},
 \code{\link{GridMetrics}()},
 \code{\link{GridSurfaceCreate}()},
+\code{\link{ReturnDensity}()},
 \code{\link{SurfaceSample}()},
 \code{\link{fusionwrapr}}
 }

@@ -18,6 +18,7 @@ ClipData(
   log = NULL,
   locale = FALSE,
   nolaszipdll = FALSE,
+  skipfilecheck = FALSE,
   shape = 0,
   decimate = NULL,
   ground = NULL,
@@ -86,6 +87,10 @@ formats (e.g. use a comma for the decimal separator).}
 \item{nolaszipdll}{boolean: Suppress the use of the LASzip dll (c) Martin Isenburg...
 removes support for compressed LAS (LAZ) files. This option
 is only useful for programs that read or write point files.}
+
+\item{skipfilecheck}{boolean: Skip logic that checks for valid point files and removes those that are invalid
+prior to the start of point processing. This option is designed to overcome some limitations with windows
+and wildcard processing. This option is only useful for programs that read point data.}
 
 \item{shape}{numeric: Shape of the sample area (0 = rectangle, 1 = circle).}
 
@@ -210,10 +215,12 @@ ClipData("*.las", "clip1.las", ground = "small.dtm", height = TRUE)
 }
 \seealso{
 Other LTKFunctions: 
+\code{\link{CanopyMaxima}()},
 \code{\link{CanopyModel}()},
 \code{\link{CloudMetrics}()},
 \code{\link{GridMetrics}()},
 \code{\link{GridSurfaceCreate}()},
+\code{\link{ReturnDensity}()},
 \code{\link{SurfaceSample}()},
 \code{\link{TreeSeg}()},
 \code{\link{fusionwrapr}}

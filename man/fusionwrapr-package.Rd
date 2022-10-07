@@ -38,11 +38,13 @@ This is especially true if you call \code{verifyFolder} directly in your code.
 }
 \seealso{
 Other LTKFunctions: 
+\code{\link{CanopyMaxima}()},
 \code{\link{CanopyModel}()},
 \code{\link{ClipData}()},
 \code{\link{CloudMetrics}()},
 \code{\link{GridMetrics}()},
 \code{\link{GridSurfaceCreate}()},
+\code{\link{ReturnDensity}()},
 \code{\link{SurfaceSample}()},
 \code{\link{TreeSeg}()}
 }

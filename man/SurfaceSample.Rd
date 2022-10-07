@@ -14,7 +14,6 @@ SurfaceSample(
   newlog = FALSE,
   log = NULL,
   locale = FALSE,
-  nolaszipdll = FALSE,
   pattern = NULL,
   topo = NULL,
   noheader = FALSE,
@@ -51,10 +50,6 @@ should contain two coordinate pairs that specify the endpoints of the line. If \
 
 \item{locale}{boolean: Adjust program logic to input and output locale-specific numeric
 formats (e.g. use a comma for the decimal separator).}
-
-\item{nolaszipdll}{boolean: Suppress the use of the LASzip dll (c) Martin Isenburg...
-removes support for compressed LAS (LAZ) files. This option
-is only useful for programs that read or write point files.}
 
 \item{pattern}{character: "type,p1,p2,p3": Generate a test pattern of sample points centered on the XY
 location from the \code{inputfile}. Pattern type 1 is a radial network of \code{p1} lines that are at
@@ -128,11 +123,13 @@ SurfaceSample("ground.dtm", "in.csv", "out.csv")
 }
 \seealso{
 Other LTKFunctions: 
+\code{\link{CanopyMaxima}()},
 \code{\link{CanopyModel}()},
 \code{\link{ClipData}()},
 \code{\link{CloudMetrics}()},
 \code{\link{GridMetrics}()},
 \code{\link{GridSurfaceCreate}()},
+\code{\link{ReturnDensity}()},
 \code{\link{TreeSeg}()},
 \code{\link{fusionwrapr}}
 }

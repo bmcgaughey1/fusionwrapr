@@ -1371,6 +1371,7 @@ GetSurfaceValues <- function(
 #' @param maxx numeric: X for upper right corner of the sample area bounding box.
 #' @param maxy numeric: Y for upper right corner of the sample area bounding box.
 #' @template StandardOptions
+#' @template SkipFileCheck
 #' @param shape numeric: Shape of the sample area (0 = rectangle, 1 = circle).
 #' @param decimate numeric: Skip # points between included points (must be > 0).
 #' @param ground character: Use a surface file with /zmin to include points above zmin
@@ -1453,6 +1454,7 @@ ClipData <- function(
   log = NULL,
   locale = FALSE,
   nolaszipdll = FALSE,
+  skipfilecheck = FALSE,
   shape = 0,
   decimate = NULL,
   ground = NULL,
@@ -1543,6 +1545,7 @@ ClipData <- function(
   options <- addSwitch(options, locale)
   options <- addSwitch(options, nolaszipdll)
   options <- addOption(options, log, TRUE)
+  options <- addSwitch(options, skipfilecheck)
 
   # program-specific options
   options <- addSwitch(options, height)
@@ -1607,6 +1610,7 @@ ClipData <- function(
 #'   If the folder for the output file does not exist, it will be created
 #'   when the function is called even when saving commands to a batch file.
 #' @template StandardOptions
+#' @template SkipFileCheck
 #' @param above numeric: Compute proportion of first returns above # (canopy cover).
 #'   Also compute the proportion of all returns above # and the
 #'   (number of returns above #) / (total number of 1st returns).
@@ -1687,6 +1691,7 @@ CloudMetrics <- function(
   log = NULL,
   locale = FALSE,
   nolaszipdll = FALSE,
+  skipfilecheck = FALSE,
   above = NULL,
   new = FALSE,
   firstinpulse = FALSE,
@@ -1759,6 +1764,7 @@ CloudMetrics <- function(
   options <- addSwitch(options, locale)
   options <- addSwitch(options, nolaszipdll)
   options <- addOption(options, log, TRUE)
+  options <- addSwitch(options, skipfilecheck)
 
   # program-specific options
   options <- addSwitch(options, new)
@@ -1814,6 +1820,7 @@ CloudMetrics <- function(
 #' @template CoordInfo
 #' @param datafile character (\strong{required}): Name(s) of lidar data files.
 #' @template StandardOptions
+#' @template SkipFileCheck
 #' @param median numeric: Apply median filter to model using # by # neighbor window.
 #' @param smooth numeric: Apply mean filter to model using # by # neighbor window.
 #' @param slope numeric: Filter areas from the surface with slope greater than # percent.
@@ -1879,6 +1886,7 @@ GridSurfaceCreate <- function(
   log = NULL,
   locale = FALSE,
   nolaszipdll = FALSE,
+  skipfilecheck = FALSE,
   median = NULL,
   smooth = NULL,
   slope = NULL,
@@ -1950,6 +1958,7 @@ GridSurfaceCreate <- function(
   options <- addSwitch(options, locale)
   options <- addSwitch(options, nolaszipdll)
   options <- addOption(options, log, TRUE)
+  options <- addSwitch(options, skipfilecheck)
 
   # program-specific options
   options <- addSwitch(options, residuals)
@@ -2015,6 +2024,7 @@ GridSurfaceCreate <- function(
 #'   it will be created  when the function is called even when saving commands to a batch file.
 #' @param datafile character (\strong{required}): Name(s) of lidar data files.
 #' @template StandardOptions
+#' @template SkipFileCheck
 #' @param outlier character: "low,high": Omit points with elevations below low and above high.
 #'   When used with data that has been normalized using a ground
 #'   surface, low and high are interpreted as heights above ground.
@@ -2134,6 +2144,7 @@ GridMetrics <- function(
   log = NULL,
   locale = FALSE,
   nolaszipdll = FALSE,
+  skipfilecheck = FALSE,
   outlier = NULL,
   class = NULL,
   ignoreoverlap = FALSE,
@@ -2211,6 +2222,7 @@ GridMetrics <- function(
   options <- addSwitch(options, locale)
   options <- addSwitch(options, nolaszipdll)
   options <- addOption(options, log, TRUE)
+  options <- addSwitch(options, skipfilecheck)
 
   # program-specific options
   options <- addSwitch(options, ignoreoverlap)
@@ -2276,6 +2288,7 @@ GridMetrics <- function(
 #' @template CoordInfo
 #' @param datafile character (\strong{required}): Name(s) of lidar data files.
 #' @template StandardOptions
+#' @template SkipFileCheck
 #' @param median numeric: Apply median filter to model using # by # neighbor window.
 #' @param smooth numeric: Apply mean filter to model using # by # neighbor window.
 #' @param texture numeric: Calculate the surface texture metric using # by # neighbor window.
@@ -2362,6 +2375,7 @@ CanopyModel <- function(
   log = NULL,
   locale = FALSE,
   nolaszipdll = FALSE,
+  skipfilecheck = FALSE,
   median = NULL,
   smooth = NULL,
   texture = NULL,
@@ -2441,6 +2455,7 @@ CanopyModel <- function(
   options <- addSwitch(options, locale)
   options <- addSwitch(options, nolaszipdll)
   options <- addOption(options, log, TRUE)
+  options <- addSwitch(options, skipfilecheck)
 
   # program-specific options
   options <- addSwitch(options, slope)
@@ -2514,6 +2529,7 @@ CanopyModel <- function(
 #'   descriptive information. If the folder for the output file does not exist, it will be created
 #'   when the function is called even when saving commands to a batch file.
 #' @template StandardOptions
+#' @template SkipFileCheck
 #' @param height boolean: Normalize canopy surface model(s) using ground model(s).
 #' @param ptheight numeric: Normalize point heights using ground model(s).
 #' @param maxht numeric: Force the maximum height for the segmentation. This will override
@@ -2580,6 +2596,7 @@ TreeSeg <- function(
   log = NULL,
   locale = FALSE,
   nolaszipdll = FALSE,
+  skipfilecheck = FALSE,
   height = FALSE,
   ptheight = FALSE,
   maxht = NULL,
@@ -2656,6 +2673,7 @@ TreeSeg <- function(
   options <- addSwitch(options, locale)
   options <- addSwitch(options, nolaszipdll)
   options <- addOption(options, log, TRUE)
+  options <- addSwitch(options, skipfilecheck)
 
   # program-specific options
   options <- addSwitch(options, height)
@@ -2709,7 +2727,7 @@ TreeSeg <- function(
 #'   should contain two coordinate pairs that specify the endpoints of the line. If \code{id = TRUE}, the
 #'   \code{inputfile} should contain a point identifier in the first column.
 #' @param outputfile character (\strong{required}): Name for the output ASCII CSV file.
-#' @template StandardOptions
+#' @template StandardOptionsNoPts
 #' @param pattern character: "type,p1,p2,p3": Generate a test pattern of sample points centered on the XY
 #'   location from the \code{inputfile}. Pattern type 1 is a radial network of \code{p1} lines that are at
 #'   least \code{p2} long with sample points every \code{p3} units. The first radial is at 3 o'clock. Radials
@@ -2757,7 +2775,6 @@ SurfaceSample <- function(
   newlog = FALSE,
   log = NULL,
   locale = FALSE,
-  nolaszipdll = FALSE,
   pattern = NULL,
   topo = NULL,
   noheader = FALSE,
@@ -2809,7 +2826,6 @@ SurfaceSample <- function(
   options <- addSwitch(options, version)
   options <- addSwitch(options, newlog)
   options <- addSwitch(options, locale)
-  options <- addSwitch(options, nolaszipdll)
   options <- addOption(options, log, TRUE)
 
   # program-specific options
@@ -2853,8 +2869,7 @@ SurfaceSample <- function(
 #'
 #' @param inputfile character (\strong{required}):  Name of the canopy height model file (PLANS DTM with .dtm extension).
 #' @param outputfile character (\strong{required}): Name for the output ASCII CSV file that will contain the maxima information.
-#' @template StandardOptions
-#'
+#' @template StandardOptionsNoPts
 #' @param ground character: Use the specified bare-earth surface model to normalize the LIDAR data
 #'   file may be wildcard or text list file (extension .txt only).
 #' @param threshold numeric: Limit analysis to areas above a height of # units (default: 10.0).
@@ -2918,6 +2933,7 @@ CanopyMaxima <- function(
     summary = FALSE,
     projection = NULL,
     minmax = NULL,
+    use64bit = TRUE,
     runCmd = TRUE,
     saveCmd = TRUE,
     cmdFile = NULL,
