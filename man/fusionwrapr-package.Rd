@@ -44,8 +44,14 @@ Other LTKFunctions:
 \code{\link{CloudMetrics}()},
 \code{\link{GridMetrics}()},
 \code{\link{GridSurfaceCreate}()},
+\code{\link{GroundFilter}()},
+\code{\link{MergeDTM}()},
+\code{\link{MergeData}()},
 \code{\link{ReturnDensity}()},
 \code{\link{SurfaceSample}()},
+\code{\link{TINSurfaceCreate}()},
+\code{\link{ThinData}()},
+\code{\link{TopoMetrics}()},
 \code{\link{TreeSeg}()}
 }
 \author{
