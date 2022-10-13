@@ -2,7 +2,7 @@
 % Please edit documentation in R/CanopyModel.R
 \name{CanopyModel}
 \alias{CanopyModel}
-\title{FUSION R command line interface -- Function to create command lines for the CanopyModel program.}
+\title{FUSION R command line interface -- Creates a canopy surface model from a point cloud.}
 \usage{
 CanopyModel(
   surfacefile = NULL,
@@ -231,14 +231,24 @@ CanopyModel("test.dtm", 2.0, "M", "M", 1, 10, 2, 2, "Test/pts.las")
 \seealso{
 Other LTKFunctions: 
 \code{\link{CanopyMaxima}()},
+\code{\link{Catalog}()},
+\code{\link{ClipDTM}()},
 \code{\link{ClipData}()},
 \code{\link{CloudMetrics}()},
+\code{\link{Cover}()},
+\code{\link{DTMDescribe}()},
+\code{\link{DensityMetrics}()},
+\code{\link{FirstLastReturn}()},
 \code{\link{GridMetrics}()},
 \code{\link{GridSurfaceCreate}()},
+\code{\link{GridSurfaceStats}()},
 \code{\link{GroundFilter}()},
+\code{\link{IntensityImage}()},
 \code{\link{MergeDTM}()},
 \code{\link{MergeData}()},
+\code{\link{MergeRaster}()},
 \code{\link{ReturnDensity}()},
+\code{\link{SplitDTM}()},
 \code{\link{SurfaceSample}()},
 \code{\link{TINSurfaceCreate}()},
 \code{\link{ThinData}()},

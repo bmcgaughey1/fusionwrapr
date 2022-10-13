@@ -2,7 +2,7 @@
 % Please edit documentation in R/GridMetrics.R
 \name{GridMetrics}
 \alias{GridMetrics}
-\title{FUSION R command line interface -- Function to create command lines for the GridMetrics program.}
+\title{FUSION R command line interface -- Computes metrics for points falling within each cell of a grid.}
 \usage{
 GridMetrics(
   groundfile = NULL,
@@ -253,13 +253,23 @@ GridMetrics("points/*.las", "test.csv", minht = 2.0)
 Other LTKFunctions: 
 \code{\link{CanopyMaxima}()},
 \code{\link{CanopyModel}()},
+\code{\link{Catalog}()},
+\code{\link{ClipDTM}()},
 \code{\link{ClipData}()},
 \code{\link{CloudMetrics}()},
+\code{\link{Cover}()},
+\code{\link{DTMDescribe}()},
+\code{\link{DensityMetrics}()},
+\code{\link{FirstLastReturn}()},
 \code{\link{GridSurfaceCreate}()},
+\code{\link{GridSurfaceStats}()},
 \code{\link{GroundFilter}()},
+\code{\link{IntensityImage}()},
 \code{\link{MergeDTM}()},
 \code{\link{MergeData}()},
+\code{\link{MergeRaster}()},
 \code{\link{ReturnDensity}()},
+\code{\link{SplitDTM}()},
 \code{\link{SurfaceSample}()},
 \code{\link{TINSurfaceCreate}()},
 \code{\link{ThinData}()},

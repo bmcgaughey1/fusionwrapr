@@ -2,7 +2,8 @@
 % Please edit documentation in R/ClipData.R
 \name{ClipData}
 \alias{ClipData}
-\title{FUSION R command line interface -- Function to create command lines for the ClipData program.}
+\title{FUSION R command line interface -- Clips subsamples of data specified by the lower left and upper
+ right corners of the area.}
 \usage{
 ClipData(
   inputspecifier = NULL,
@@ -217,13 +218,23 @@ ClipData("*.las", "clip1.las", ground = "small.dtm", height = TRUE)
 Other LTKFunctions: 
 \code{\link{CanopyMaxima}()},
 \code{\link{CanopyModel}()},
+\code{\link{Catalog}()},
+\code{\link{ClipDTM}()},
 \code{\link{CloudMetrics}()},
+\code{\link{Cover}()},
+\code{\link{DTMDescribe}()},
+\code{\link{DensityMetrics}()},
+\code{\link{FirstLastReturn}()},
 \code{\link{GridMetrics}()},
 \code{\link{GridSurfaceCreate}()},
+\code{\link{GridSurfaceStats}()},
 \code{\link{GroundFilter}()},
+\code{\link{IntensityImage}()},
 \code{\link{MergeDTM}()},
 \code{\link{MergeData}()},
+\code{\link{MergeRaster}()},
 \code{\link{ReturnDensity}()},
+\code{\link{SplitDTM}()},
 \code{\link{SurfaceSample}()},
 \code{\link{TINSurfaceCreate}()},
 \code{\link{ThinData}()},

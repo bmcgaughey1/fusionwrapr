@@ -1,6 +1,6 @@
 # ---------- PolyClipData
 #
-#' FUSION R command line interface -- Merges several point cloud files into a single file.
+#' FUSION R command line interface -- Clips point data using polygons stored in shapefiles.
 #'
 #' \code{PolyClipData} creates command lines for the FUSION PolyClipData program and optionally executes them.
 #'

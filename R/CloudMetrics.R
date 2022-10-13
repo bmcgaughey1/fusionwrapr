@@ -1,6 +1,6 @@
 # ---------- CloudMetrics
 #
-#' FUSION R command line interface -- Function to create command lines for the CloudMetrics program.
+#' FUSION R command line interface -- Computes metrics describing an entire point cloud.
 #'
 #' \code{CloudMetrics} creates command lines for the FUSION CloudMetrics program and optionally executes them.
 #'

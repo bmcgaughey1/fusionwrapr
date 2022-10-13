@@ -113,7 +113,7 @@ CanopyMaxima <- function(
   cmdClear <- FALSE
 
   # build command line
-  cmd <- programName("CanopyMaxima", FALSE)
+  cmd <- programName("CanopyMaxima", use64bit)
 
   options <- ""
   required <- ""

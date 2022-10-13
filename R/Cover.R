@@ -1,29 +1,24 @@
-# GridSurfaceCreate
-# ---------- GridSurfaceCreate
+# Cover
+# ---------- Cover
 #
-#' FUSION R command line interface -- Creates a gridded surface model from point data.
+#' FUSION R command line interface -- Computes cover estimates using a bare-earth surface model and point cloud.
 #'
-#' \code{GridSurfaceCreate} creates command lines for the FUSION GridSurfaceCreate program and optionally executes them.
+#' \code{Cover} creates command lines for the FUSION Cover program and optionally executes them.
 #'
 #' @template MultipleCommands
 #'
-#' @param surfacefile character (\strong{required}): Name for output surface file (stored in PLANS DTM format with .dtm extension).
-#'   If the folder for the output file does not exist, it will be created
-#'   when the function is called even when saving commands to a batch file.
+#' @param groundfile character (\strong{required}): Name of the bare-earth surface model used to normalize
+#'  LIDAR data groundfile may be wildcard or text list file (extension .txt).
+#' @param coverfile character (\strong{required}): Name for output canopy cover file (stored in PLANS DTM format with .dtm extension).
+#'  If the folder for the output file does not exist, it will be created when the function is called even
+#'  when saving commands to a batch file.
+#' @param heightbreak numeric (\strong{required}): Height break for cover layer...base of desired layer.
 #' @param cellsize numeric (\strong{required}): Desired grid cell size in the same units as LIDAR data.
 #' @template CoordInfo
 #' @param datafile character (\strong{required}): Name(s) of lidar data files.
 #' @template StandardOptions
 #' @template SkipFileCheck
-#' @param median numeric: Apply median filter to model using # by # neighbor window.
-#' @param smooth numeric: Apply mean filter to model using # by # neighbor window.
-#' @param slope numeric: Filter areas from the surface with slope greater than # percent.
-#'   Slope filtering takes place after all other smoothing operations.
-#' @param spike numeric: Filter to remove spikes with slopes greater than # percent.
-#'   Spike filtering takes place after slope filtering.
-#' @param residuals boolean: Compute residual statistics for all points.
-#' @param filldist numeric: Maximum search radius (in cells) used when filling holes in the
-#'   surface. Default is 99 cells.
+#' @param all boolean: Use all returns when computing percent cover (default is first returns only).
 #' @param class character: "#,#,#,...": LAS files only: Specifies that only points with classification
 #'   values listed are to be included in the subsample.
 #'   Classification values should be separated by a comma.
@@ -32,26 +27,10 @@
 #'   as the classes you DO NOT want included in the subsample.
 #'   e.g. /class:~2,3 would include all class values EXCEPT 2 and 3.
 #' @param ignoreoverlap boolean: Ignore points with the overlap flag set (LAS V1.4+ format).
-#' @param minimum boolean: Use the minimum elevation value in cells to create the surface.
-#' @param maximum boolean: Use the maximum elevation value in cells to create the surface.
-#' @param grid character: "X1,X2,Y1,Y2": Force the origin of the output grid to be (X,Y) instead of
-#'   computing an origin from the data extents and force the grid to
-#'   be W units wide and H units high...W and H will be rounded up to
-#'   a multiple of cellsize.
-#' @param gridxy character: "X1,X2,Y1,Y2": Force the origin of the output grid to be (X1,Y1) instead
-#'   of computing an origin from the data extents and force the grid
-#'   to use (X2,Y2) as the upper right corner of the coverage area.
-#'   The actual upper right corner will be adjusted to be a multiple
-#'   of cellsize.
-#' @param align character: Force the origin and extent of the output grid to match the
-#'   lower left corner and extent of the specified PLANS format DTM file.
-#' @param extent character: Force the origin and extent of the output grid to match the
-#'   lower left corner and extent of the specified PLANS format DTM
-#'   file but adjust the origin to be an even multiple of the cell
-#'   size and the width and height to be multiples of the cell size.
-#' @param smoothfirst boolean: indicating smoothing should occur before median
-#'   filtering. The default is for median filtering to happen before smoothing.
-#' @template Use64bit
+#' @param penetration boolean: Compute proportion of returns close to ground surface (returns
+#'  within \code{+-heightbreak} units).
+#' @param upper numeric: Use an upper limit when computing the cover value. This allows for
+#'  calculation of the proportion of returns between a lower and upper height/elevation range.
 #' @template RunSaveOptions
 #' @template Comment
 #' @return Return value depends on \code{runCmd}. if \code{runCmd = TRUE}, return value is
@@ -59,12 +38,14 @@
 #'   if \code{runCmd = FALSE}, return value is the (invisible) command line.
 #' @examples
 #' \dontrun{
-#' GridSurfaceCreate("test.dtm", 2.0, "M", "M", 1, 10, 2, 2, "Test/pts.las", class = "2")
+#' Cover("ground.dtm", "cancover.dtm", 6.0, 2.0, "M", "M", 1, 10, 2, 2, "pts.las", class = "~7")
 #' }
 #' @family LTKFunctions
 #' @export
-GridSurfaceCreate <- function(
-    surfacefile = NULL,
+Cover <- function(
+    groundfile = NULL,
+    coverfile = NULL,
+    heightbreak = NULL,
     cellsize = NULL,
     xyunits = NULL,
     zunits = NULL,
@@ -81,22 +62,11 @@ GridSurfaceCreate <- function(
     locale = FALSE,
     nolaszipdll = FALSE,
     skipfilecheck = FALSE,
-    median = NULL,
-    smooth = NULL,
-    slope = NULL,
-    spike = NULL,
-    residuals = FALSE,
-    filldist = NULL,
+    all = FALSE,
     class = NULL,
     ignoreoverlap = FALSE,
-    minimum = FALSE,
-    maximum = FALSE,
-    grid = NULL,
-    gridxy = NULL,
-    align = NULL,
-    extent = NULL,
-    smoothfirst = FALSE,
-    use64bit = TRUE,
+    penetration = FALSE,
+    upper = NULL,
     runCmd = TRUE,
     saveCmd = TRUE,
     cmdFile = NULL,
@@ -105,7 +75,9 @@ GridSurfaceCreate <- function(
     comment = NULL
 ) {
   # check for required options
-  if (!isOpt(surfacefile)
+  if (!isOpt(groundfile)
+      || !isOpt(coverfile)
+      || !isOpt(heightbreak)
       || !isOpt(cellsize)
       || !isOpt(xyunits)
       || !isOpt(zunits)
@@ -115,7 +87,7 @@ GridSurfaceCreate <- function(
       || !isOpt(vertdatum)
       || !isOpt(datafile)
   ) {
-    stop("Missing required parameters: surfacefile, cellsize, xyunits, zunits, coordsys, zone, horizdatum, vertdatum, datafile")
+    stop("Missing required parameters: groundfile, coverfile, heightbreak, cellsize, xyunits, zunits, coordsys, zone, horizdatum, vertdatum, datafile")
   }
 
   # use the global variables to set command dispatch options...global options
@@ -132,13 +104,13 @@ GridSurfaceCreate <- function(
   checkRunSaveFile(runCmd, saveCmd, cmdFile)
 
   # check for folder included in output...will create if it doesn't exist
-  verifyFolder(dirname(surfacefile), runCmd, saveCmd, cmdFile, cmdClear)
+  verifyFolder(dirname(coverfile), runCmd, saveCmd, cmdFile, cmdClear)
 
   # if we are saving commands to a file, cmdClear will have done its job in the call to verifyFolder
   cmdClear <- FALSE
 
   # build command line
-  cmd <- programName("GridSurfaceCreate", use64bit)
+  cmd <- programName("Cover", FALSE)
 
   options <- ""
   required <- ""
@@ -155,30 +127,19 @@ GridSurfaceCreate <- function(
   options <- addSwitch(options, skipfilecheck)
 
   # program-specific options
-  options <- addSwitch(options, residuals)
+  options <- addSwitch(options, all)
   options <- addSwitch(options, ignoreoverlap)
-  options <- addSwitch(options, minimum)
-  options <- addSwitch(options, maximum)
+  options <- addSwitch(options, penetration)
 
   # deal with options...
   # program-specific options
-  if (smoothfirst)
-    options <- addOption(options, smooth)
-
-  options <- addOption(options, median)
-  if (!smoothfirst)
-    options <- addOption(options, smooth)
-  options <- addOption(options, slope)
-  options <- addOption(options, spike)
-  options <- addOption(options, filldist)
   options <- addOption(options, class)
-  options <- addOption(options, grid)
-  options <- addOption(options, gridxy)
-  options <- addOption(options, align, TRUE)
-  options <- addOption(options, extent, TRUE)
+  options <- addOption(options, upper)
 
   # deal with required parameters...some may have defaults
-  required <- addRequired(required, surfacefile, TRUE)
+  required <- addRequired(required, groundfile, TRUE)
+  required <- addRequired(required, coverfile, TRUE)
+  required <- addRequired(required, heightbreak, TRUE)
   required <- addRequired(required, cellsize)
   required <- addRequired(required, xyunits)
   required <- addRequired(required, zunits)

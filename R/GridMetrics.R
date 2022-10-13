@@ -1,7 +1,7 @@
 # GridMetrics
 # ---------- GridMetrics
 #
-#' FUSION R command line interface -- Function to create command lines for the GridMetrics program.
+#' FUSION R command line interface -- Computes metrics for points falling within each cell of a grid.
 #'
 #' \code{GridMetrics} creates command lines for the FUSION GridMetrics program and optionally executes them.
 #'
@@ -250,7 +250,7 @@ GridMetrics <- function(
   # deal with required parameters...some may have defaults
   required <- addRequired(required, groundfile, TRUE)
   required <- addRequired(required, heightbreak, TRUE)
-  required <- addRequired(required, cellsize, TRUE)
+  required <- addRequired(required, cellsize)
   required <- addRequired(required, outputfile, TRUE)
   required <- addRequired(required, datafile, TRUE)
 

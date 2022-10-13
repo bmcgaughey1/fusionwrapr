@@ -2,7 +2,7 @@
 % Please edit documentation in R/TopoMetrics.R
 \name{TopoMetrics}
 \alias{TopoMetrics}
-\title{FUSION R command line interface -- Function to interpolate surface values for XY locations.}
+\title{FUSION R command line interface -- Computes topographic metrics using surface models.}
 \usage{
 TopoMetrics(
   surfacefile = NULL,
@@ -154,14 +154,24 @@ TopoMetrics("grnd.dtm", 30.0, 10.0, 43.5, 90.0, "topometrics.csv")
 Other LTKFunctions: 
 \code{\link{CanopyMaxima}()},
 \code{\link{CanopyModel}()},
+\code{\link{Catalog}()},
+\code{\link{ClipDTM}()},
 \code{\link{ClipData}()},
 \code{\link{CloudMetrics}()},
+\code{\link{Cover}()},
+\code{\link{DTMDescribe}()},
+\code{\link{DensityMetrics}()},
+\code{\link{FirstLastReturn}()},
 \code{\link{GridMetrics}()},
 \code{\link{GridSurfaceCreate}()},
+\code{\link{GridSurfaceStats}()},
 \code{\link{GroundFilter}()},
+\code{\link{IntensityImage}()},
 \code{\link{MergeDTM}()},
 \code{\link{MergeData}()},
+\code{\link{MergeRaster}()},
 \code{\link{ReturnDensity}()},
+\code{\link{SplitDTM}()},
 \code{\link{SurfaceSample}()},
 \code{\link{TINSurfaceCreate}()},
 \code{\link{ThinData}()},

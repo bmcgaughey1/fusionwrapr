@@ -1,6 +1,7 @@
 # ---------- ClipData
 #
-#' FUSION R command line interface -- Function to create command lines for the ClipData program.
+#' FUSION R command line interface -- Clips subsamples of data specified by the lower left and upper
+#'  right corners of the area.
 #'
 #' \code{ClipData} creates command lines for the FUSION ClipData program and optionally executes them.
 #'

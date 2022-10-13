@@ -1,7 +1,8 @@
 # TINSurfaceCreate
 # ---------- TINSurfaceCreate
 #
-#' FUSION R command line interface -- Function to create command lines for the TINSurfaceCreate program.
+#' FUSION R command line interface -- Creates a DTM surface model using points in LIDAR data files (uses TIN then
+#'  grids to final cell size).
 #'
 #' \code{TINSurfaceCreate} creates command lines for the FUSION TINSurfaceCreate program and optionally executes them.
 #'

@@ -1,7 +1,7 @@
 # TopoMetrics
 # ---------- TopoMetrics
 #
-#' FUSION R command line interface -- Function to interpolate surface values for XY locations.
+#' FUSION R command line interface -- Computes topographic metrics using surface models.
 #'
 #' \code{TopoMetrics} creates command lines for the FUSION TopoMetrics program and optionally executes them.
 #'
@@ -123,7 +123,7 @@ TopoMetrics <- function(
   cmdClear <- FALSE
 
   # build command line
-  cmd <- programName("TopoMetrics", FALSE)
+  cmd <- programName("TopoMetrics", use64bit)
 
   options <- ""
   required <- ""

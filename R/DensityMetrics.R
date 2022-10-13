@@ -1,29 +1,37 @@
-# GridSurfaceCreate
-# ---------- GridSurfaceCreate
+# DensityMetrics
+# ---------- DensityMetrics
 #
-#' FUSION R command line interface -- Creates a gridded surface model from point data.
+#' FUSION R command line interface -- Computes point density metrics using elevation-based slices.
 #'
-#' \code{GridSurfaceCreate} creates command lines for the FUSION GridSurfaceCreate program and optionally executes them.
+#' \code{DensityMetrics} creates command lines for the FUSION DensityMetrics program and optionally executes them.
 #'
 #' @template MultipleCommands
 #'
-#' @param surfacefile character (\strong{required}): Name for output surface file (stored in PLANS DTM format with .dtm extension).
-#'   If the folder for the output file does not exist, it will be created
-#'   when the function is called even when saving commands to a batch file.
+#' @param groundfile  character (\strong{required}): Name for ground surface model (PLANS DTM with .dtm extension).
+#'   May be wildcard or text list file (extension .txt only).
 #' @param cellsize numeric (\strong{required}): Desired grid cell size in the same units as LIDAR data.
-#' @template CoordInfo
+#' @param slicethickness numeric (\strong{required}): Slice thickness for density metrics in the same units
+#'  as LIDAR data.
+#' @param outputfile character (\strong{required}): Base name for output file. Metrics are stored in CSV format with
+#'   .csv extension unless the /nocsv switch is used. Other outputs are stored in files named using the
+#'   base name and additional descriptive information. If the folder for the output file does not exist,
+#'   it will be created  when the function is called even when saving commands to a batch file.
 #' @param datafile character (\strong{required}): Name(s) of lidar data files.
 #' @template StandardOptions
 #' @template SkipFileCheck
-#' @param median numeric: Apply median filter to model using # by # neighbor window.
-#' @param smooth numeric: Apply mean filter to model using # by # neighbor window.
-#' @param slope numeric: Filter areas from the surface with slope greater than # percent.
-#'   Slope filtering takes place after all other smoothing operations.
-#' @param spike numeric: Filter to remove spikes with slopes greater than # percent.
-#'   Spike filtering takes place after slope filtering.
-#' @param residuals boolean: Compute residual statistics for all points.
-#' @param filldist numeric: Maximum search radius (in cells) used when filling holes in the
-#'   surface. Default is 99 cells.
+#' @param outlier character: "low,high": Omit points with elevations below low and above high.
+#'   When used with data that has been normalized using a ground
+#'   surface, low and high are interpreted as heights above ground.
+#'   You should use care when using /outlier:low,high with /minht and
+#'   /maxht options. If the low value specified with /outlier is above
+#'   the value specified with /minht, the value for /outlier will
+#'   override the value specified for /minht. Similarly, if the high
+#'   value specified with /outlier is less than the value specified
+#'   for /maxht, the /outlier value will override the value for
+#'   /maxht.
+#' @param maxsliceht numeric: "high": Limit the range of height slices from 0 to \code{high}.
+#' @param ignoreoverlap boolean: Ignore points with the overlap flag set (LAS V1.4+ format).
+#' @param nocsv boolean: Do not create an output file for cell metrics.
 #' @param class character: "#,#,#,...": LAS files only: Specifies that only points with classification
 #'   values listed are to be included in the subsample.
 #'   Classification values should be separated by a comma.
@@ -31,9 +39,11 @@
 #'   If the first character in string is ~, the list is interpreted
 #'   as the classes you DO NOT want included in the subsample.
 #'   e.g. /class:~2,3 would include all class values EXCEPT 2 and 3.
-#' @param ignoreoverlap boolean: Ignore points with the overlap flag set (LAS V1.4+ format).
-#' @param minimum boolean: Use the minimum elevation value in cells to create the surface.
-#' @param maximum boolean: Use the maximum elevation value in cells to create the surface.
+#' @param first boolean: Use only first returns to compute all metrics (default is to
+#'   use all returns for metrics).
+#' @param slices character: "#,#,#,...": Use specific slice height breaks rather than evenly spaced
+#'  breaks based on the range of heights in the data (max of 64 slice heights). The first slice
+#'  always starts at 0.0.
 #' @param grid character: "X1,X2,Y1,Y2": Force the origin of the output grid to be (X,Y) instead of
 #'   computing an origin from the data extents and force the grid to
 #'   be W units wide and H units high...W and H will be rounded up to
@@ -45,12 +55,18 @@
 #'   of cellsize.
 #' @param align character: Force the origin and extent of the output grid to match the
 #'   lower left corner and extent of the specified PLANS format DTM file.
-#' @param extent character: Force the origin and extent of the output grid to match the
-#'   lower left corner and extent of the specified PLANS format DTM
-#'   file but adjust the origin to be an even multiple of the cell
-#'   size and the width and height to be multiples of the cell size.
-#' @param smoothfirst boolean: indicating smoothing should occur before median
-#'   filtering. The default is for median filtering to happen before smoothing.
+# @param extent character: Force the origin and extent of the output grid to match the
+#   lower left corner and extent of the specified PLANS format DTM
+#   file but adjust the origin to be an even multiple of the cell
+#   size and the width and height to be multiples of the cell size.
+#' @param buffer numeric: Add a buffer to the data extent specified by /grid or /gridxy
+#'   when computing metrics but only output data for the specified
+#'   extent. The buffer width is first converted to a cellbuffer and
+#'   then added all around the extent. The actual buffer width may be
+#'   slightly larger than specified by width.
+#' @param cellbuffer numeric: Add a buffer to the data extent specified by /grid or /gridxy
+#'   when computing metrics but only output data for the specified
+#'   extent. The buffer (number of cells) is added around the extent.
 #' @template Use64bit
 #' @template RunSaveOptions
 #' @template Comment
@@ -59,19 +75,15 @@
 #'   if \code{runCmd = FALSE}, return value is the (invisible) command line.
 #' @examples
 #' \dontrun{
-#' GridSurfaceCreate("test.dtm", 2.0, "M", "M", 1, 10, 2, 2, "Test/pts.las", class = "2")
+#' DensityMetrics("ground.dtm", 30.0, 4.0, "density.csv", "*.las")
 #' }
 #' @family LTKFunctions
 #' @export
-GridSurfaceCreate <- function(
-    surfacefile = NULL,
+DensityMetrics <- function(
+    groundfile = NULL,
     cellsize = NULL,
-    xyunits = NULL,
-    zunits = NULL,
-    coordsys = NULL,
-    zone = NULL,
-    horizdatum = NULL,
-    vertdatum = NULL,
+    slicethickness = NULL,
+    outputfile = NULL,
     datafile = NULL,
     quiet = FALSE,
     verbose = FALSE,
@@ -81,21 +93,19 @@ GridSurfaceCreate <- function(
     locale = FALSE,
     nolaszipdll = FALSE,
     skipfilecheck = FALSE,
-    median = NULL,
-    smooth = NULL,
-    slope = NULL,
-    spike = NULL,
-    residuals = FALSE,
-    filldist = NULL,
-    class = NULL,
+    outlier = NULL,
+    maxsliceht = NULL,
     ignoreoverlap = FALSE,
-    minimum = FALSE,
-    maximum = FALSE,
+    nocsv = FALSE,
+    class = NULL,
+    first = FALSE,
+    slices = NULL,
     grid = NULL,
     gridxy = NULL,
+#    extent = NULL,
     align = NULL,
-    extent = NULL,
-    smoothfirst = FALSE,
+    buffer = NULL,
+    cellbuffer = NULL,
     use64bit = TRUE,
     runCmd = TRUE,
     saveCmd = TRUE,
@@ -105,17 +115,13 @@ GridSurfaceCreate <- function(
     comment = NULL
 ) {
   # check for required options
-  if (!isOpt(surfacefile)
+  if (!isOpt(groundfile)
       || !isOpt(cellsize)
-      || !isOpt(xyunits)
-      || !isOpt(zunits)
-      || !isOpt(coordsys)
-      || !isOpt(zone)
-      || !isOpt(horizdatum)
-      || !isOpt(vertdatum)
+      || !isOpt(slicethickness)
+      || !isOpt(outputfile)
       || !isOpt(datafile)
   ) {
-    stop("Missing required parameters: surfacefile, cellsize, xyunits, zunits, coordsys, zone, horizdatum, vertdatum, datafile")
+    stop("Missing required parameters: groundfile, cellsize, slicethickness, outputfile, datafile")
   }
 
   # use the global variables to set command dispatch options...global options
@@ -132,13 +138,13 @@ GridSurfaceCreate <- function(
   checkRunSaveFile(runCmd, saveCmd, cmdFile)
 
   # check for folder included in output...will create if it doesn't exist
-  verifyFolder(dirname(surfacefile), runCmd, saveCmd, cmdFile, cmdClear)
+  verifyFolder(dirname(outputfile), runCmd, saveCmd, cmdFile, cmdClear)
 
   # if we are saving commands to a file, cmdClear will have done its job in the call to verifyFolder
   cmdClear <- FALSE
 
   # build command line
-  cmd <- programName("GridSurfaceCreate", use64bit)
+  cmd <- programName("DensityMetrics", use64bit)
 
   options <- ""
   required <- ""
@@ -155,37 +161,28 @@ GridSurfaceCreate <- function(
   options <- addSwitch(options, skipfilecheck)
 
   # program-specific options
-  options <- addSwitch(options, residuals)
   options <- addSwitch(options, ignoreoverlap)
-  options <- addSwitch(options, minimum)
-  options <- addSwitch(options, maximum)
+  options <- addSwitch(options, nocsv)
+  options <- addSwitch(options, first)
 
   # deal with options...
   # program-specific options
-  if (smoothfirst)
-    options <- addOption(options, smooth)
-
-  options <- addOption(options, median)
-  if (!smoothfirst)
-    options <- addOption(options, smooth)
-  options <- addOption(options, slope)
-  options <- addOption(options, spike)
-  options <- addOption(options, filldist)
+  options <- addOption(options, outlier)
+  options <- addOption(options, maxsliceht)
   options <- addOption(options, class)
+  options <- addOption(options, slices)
   options <- addOption(options, grid)
   options <- addOption(options, gridxy)
   options <- addOption(options, align, TRUE)
-  options <- addOption(options, extent, TRUE)
+#  options <- addOption(options, extent, TRUE)
+  options <- addOption(options, buffer)
+  options <- addOption(options, cellbuffer)
 
   # deal with required parameters...some may have defaults
-  required <- addRequired(required, surfacefile, TRUE)
-  required <- addRequired(required, cellsize)
-  required <- addRequired(required, xyunits)
-  required <- addRequired(required, zunits)
-  required <- addRequired(required, coordsys)
-  required <- addRequired(required, zone)
-  required <- addRequired(required, horizdatum)
-  required <- addRequired(required, vertdatum)
+  required <- addRequired(required, groundfile, TRUE)
+  required <- addRequired(required, cellsize, TRUE)
+  required <- addRequired(required, slicethickness, TRUE)
+  required <- addRequired(required, outputfile, TRUE)
   required <- addRequired(required, datafile, TRUE)
 
   echoCommand(cmd, options, required, echoCmd)

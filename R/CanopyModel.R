@@ -1,7 +1,7 @@
 # CanopyModel
 # ---------- CanopyModel
 #
-#' FUSION R command line interface -- Function to create command lines for the CanopyModel program.
+#' FUSION R command line interface -- Creates a canopy surface model from a point cloud.
 #'
 #' \code{CanopyModel} creates command lines for the FUSION CanopyModel program and optionally executes them.
 #'

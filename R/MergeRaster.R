@@ -1,33 +1,26 @@
-# MergeDTM
-# ---------- MergeDTM
+# MergeRaster
+# ---------- MergeRaster
 #
-#' FUSION R command line interface -- Function to merge several .DTM files into a single file.
+#' FUSION R command line interface -- Merge ASCII raster files into a single ASCII raster file.
 #'
-#' \code{MergeDTM} creates command lines for the FUSION MergeDTM program and optionally executes them.
+#' \code{MergeRaster} creates command lines for the FUSION MergeRaster program and optionally executes them.
 #'
 #' @template MultipleCommands
 #'
-#' @param outputfile character (\strong{required}): Name for the output .DTM file containing the merged data.
-#' @param inputfile character (\strong{required}):  File name template for .DTM files to be merged or the
-#'  name of a text file containing a list of .DTM files.
+#' @param outputfile character (\strong{required}): Name for the output ASCII raster file containing the merged data.
+#' @param inputfile character (\strong{required}):  File name template for ASCII raster files to be merged, a list of
+#'  ASCII raster file names, or text file containing a list of ASCII raster file names with the
+#'  ".txt" extension. If you are specifying a single input file on the command line, the file
+#'  extension cannot be ".txt".
 #' @template StandardOptionsNoPts
-#' @param cellsize numeric: Resample the data using a # by # pixel.
 #' @param overlap character: Specify how overlap areas should be treated. Operators are: "average", "min",
 #'  "max", "add", "new." The \code{new} operator populates a pixel using the value from the last .DTM file containing
-#'  valid data for the pixel.
-#' @param disk boolean: Merge the .DTM files to a disk file. The default behavior is to try to hold the
-#'  merged model into memory but there can be problems when there is not quite enough memory for the model.
-#' @param precision numeric: Override the default precision for the merged output file. The default behavior
-#'  is to use the highest precision of the input models to establish the precision of the output model.
-#'  Valid values for precision are:
-#'  0     2-byte integer
-#'  1     4-byte integer
-#'  2     4-byte floating point (C type: float)
-#'  3     8-byte floating point (C type: double)
-#' @param exactextent boolean: Preserve the exact extent of the input models in the output model. The
-#'  default behavior is to expand the extent to the nearest multiple of the output cell size.
-#' @param halfcell boolean: Offset the origin and expand the width and height by 1/2 of the output cell size.
-#' @param nofill boolean: Do not fill holes in the merged DTM.
+#'  ASCII raster file containing valid data for the pixel.
+#' @param compare boolean: Reports if values in cells common to two or more input files are different
+#'  by more than 0.001.
+#' @param precision numeric: Output value with # digits to the right of the decimal point.
+#'  Default precision is 4 digits.
+#' @param nodata numeric: Use value (#) to indicate no data in the output file. Default NODATA value is -9999.
 #' @template Use64bit
 #' @template RunSaveOptions
 #' @template Comment
@@ -36,11 +29,11 @@
 #'   if \code{runCmd = FALSE}, return value is the (invisible) command line.
 #' @examples
 #' \dontrun{
-#' MergeDTM("merged_grnd.dtm", "*.dtm")
+#' MergeRaster("merged_grnd.asc", "*.asc")
 #' }
 #' @family LTKFunctions
 #' @export
-MergeDTM <- function(
+MergeRaster <- function(
     outputfile = NULL,
     inputfile = NULL,
     quiet = FALSE,
@@ -49,13 +42,10 @@ MergeDTM <- function(
     newlog = FALSE,
     log = NULL,
     locale = FALSE,
-    cellsize = NULL,
     overlap = NULL,
-    disk = FALSE,
+    compare = FALSE,
     precision = NULL,
-    exactextent = FALSE,
-    halfcell = FALSE,
-    nofill = FALSE,
+    nodata = NULL,
     use64bit = TRUE,
     runCmd = TRUE,
     saveCmd = TRUE,
@@ -90,7 +80,7 @@ MergeDTM <- function(
   cmdClear <- FALSE
 
   # build command line
-  cmd <- programName("MergeDTM", use64bit)
+  cmd <- programName("MergeRaster", use64bit)
 
   options <- ""
   required <- ""
@@ -105,15 +95,12 @@ MergeDTM <- function(
   options <- addOption(options, log, TRUE)
 
   # program-specific options
-  options <- addSwitch(options, disk)
-  options <- addSwitch(options, exactextent)
-  options <- addSwitch(options, halfcell)
-  options <- addSwitch(options, nofill)
+  options <- addSwitch(options, compare)
 
   # deal with options...
-  options <- addOption(options, cellsize)
   options <- addOption(options, overlap)
   options <- addOption(options, precision)
+  options <- addOption(options, nodata)
 
   # deal with required parameters...some may have defaults
   required <- addRequired(required, outputfile, TRUE)

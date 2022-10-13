@@ -1,7 +1,7 @@
 # TreeSeg
 # ---------- TreeSeg
 #
-#' FUSION R command line interface -- Function to create command lines for the TreeSeg program.
+#' FUSION R command line interface -- Individual tree segmentation using CHM and point cloud.
 #'
 #' \code{TreeSeg} creates command lines for the FUSION TreeSeg program and optionally executes them.
 #'

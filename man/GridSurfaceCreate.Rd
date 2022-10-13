@@ -2,7 +2,7 @@
 % Please edit documentation in R/GridSurfaceCreate.R
 \name{GridSurfaceCreate}
 \alias{GridSurfaceCreate}
-\title{FUSION R command line interface -- Function to create command lines for the GridSurfaceCreate program.}
+\title{FUSION R command line interface -- Creates a gridded surface model from point data.}
 \usage{
 GridSurfaceCreate(
   surfacefile = NULL,
@@ -195,13 +195,23 @@ GridSurfaceCreate("test.dtm", 2.0, "M", "M", 1, 10, 2, 2, "Test/pts.las", class 
 Other LTKFunctions: 
 \code{\link{CanopyMaxima}()},
 \code{\link{CanopyModel}()},
+\code{\link{Catalog}()},
+\code{\link{ClipDTM}()},
 \code{\link{ClipData}()},
 \code{\link{CloudMetrics}()},
+\code{\link{Cover}()},
+\code{\link{DTMDescribe}()},
+\code{\link{DensityMetrics}()},
+\code{\link{FirstLastReturn}()},
 \code{\link{GridMetrics}()},
+\code{\link{GridSurfaceStats}()},
 \code{\link{GroundFilter}()},
+\code{\link{IntensityImage}()},
 \code{\link{MergeDTM}()},
 \code{\link{MergeData}()},
+\code{\link{MergeRaster}()},
 \code{\link{ReturnDensity}()},
+\code{\link{SplitDTM}()},
 \code{\link{SurfaceSample}()},
 \code{\link{TINSurfaceCreate}()},
 \code{\link{ThinData}()},
