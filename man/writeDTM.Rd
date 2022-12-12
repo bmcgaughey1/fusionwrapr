@@ -33,9 +33,9 @@ lower left corner (same arrangement as FUSION's DTM files).}
 \item{description}{character: Descriptive name for the DTM. Default is "DTM written by fusionwrapr R package". Length
 will be truncated to 60 characters.}
 
-\item{xyunits}{character (\strong{required}): Units for LIDAR data XY (M for meters or F for feet).}
+\item{xyunits}{character (\strong{required}): Units for LIDAR data XY (M for meters, F for feet, O for other or unknown).}
 
-\item{zunits}{character (\strong{required}): Units for LIDAR data elevations (M for meters or F for feet).}
+\item{zunits}{character (\strong{required}): Units for LIDAR data elevations (M for meters, F for feet, O for other or unknown).}
 
 \item{coordsys}{numeric (\strong{required}): Coordinate system for LIDAR data:
 0 for unknown
@@ -66,11 +66,15 @@ will be truncated to 60 characters.}
 \item{rotate}{boolean: Flag indicating grid of values needs to be rotated before being written to \code{fileName}. See the
 description of \code{x} for details regarding the expected arrangement of values in the grid.}
 
-\item{storageFormat}{integer: Integer value indicating the numeric type for values stored in the DTM file. The default
-value (-1) indicates that the actual data type is used to dictate the appropriate format. Storage options when \code{storageFormat = -1}
-are 2-byte signed integers for integer values and 4-byte floating point numbers for non-integer values. Possible values
-are: 0: 2-byte signed integers, 1: 4-byte signed integers, 2: 4-byte floating point numbers, and 3: 8-byte floating point numbers.
-Storing floating point values as integers will force truncation of the values.}
+\item{storageFormat}{integer: Integer value indicating the numeric type for
+values stored in the DTM file. The default value (-1) indicates that the
+actual data type of the data object is used to dictate the appropriate
+format. Storage options when \code{storageFormat = -1} are 2-byte signed
+integers for integer values and 4-byte floating point numbers for
+non-integer values. Possible values are: 0: 2-byte signed integers, 1:
+4-byte signed integers, 2: 4-byte floating point numbers, and 3: 8-byte
+floating point numbers. Storing floating point values as integers will
+force truncation of the values.}
 }
 \value{
 Returns an invisible boolean value indicating success (TRUE) or failure (FALSE).

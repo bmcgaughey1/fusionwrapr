@@ -61,9 +61,9 @@ commands to a batch file.}
 
 \item{cellsize}{numeric (\strong{required}): Desired grid cell size in the same units as LIDAR data.}
 
-\item{xyunits}{character (\strong{required}): Units for LIDAR data XY (M for meters or F for feet).}
+\item{xyunits}{character (\strong{required}): Units for LIDAR data XY (M for meters, F for feet, O for other or unknown).}
 
-\item{zunits}{character (\strong{required}): Units for LIDAR data elevations (M for meters or F for feet).}
+\item{zunits}{character (\strong{required}): Units for LIDAR data elevations (M for meters, F for feet, O for other or unknown).}
 
 \item{coordsys}{numeric (\strong{required}): Coordinate system for LIDAR data:
 0 for unknown
