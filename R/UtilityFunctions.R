@@ -400,11 +400,15 @@ readDTM <- function(
 #' @param rowSpacing numeric (\strong{required when \code{x} is matrix}): Spacing between rows.
 #' @param rotate boolean: Flag indicating grid of values needs to be rotated before being written to \code{fileName}. See the
 #'   description of \code{x} for details regarding the expected arrangement of values in the grid.
-#' @param storageFormat integer: Integer value indicating the numeric type for values stored in the DTM file. The default
-#'   value (-1) indicates that the actual data type is used to dictate the appropriate format. Storage options when \code{storageFormat = -1}
-#'   are 2-byte signed integers for integer values and 4-byte floating point numbers for non-integer values. Possible values
-#'   are: 0: 2-byte signed integers, 1: 4-byte signed integers, 2: 4-byte floating point numbers, and 3: 8-byte floating point numbers.
-#'   Storing floating point values as integers will force truncation of the values.
+#' @param storageFormat integer: Integer value indicating the numeric type for
+#'   values stored in the DTM file. The default value (-1) indicates that the
+#'   actual data type of the data object is used to dictate the appropriate
+#'   format. Storage options when \code{storageFormat = -1} are 2-byte signed
+#'   integers for integer values and 4-byte floating point numbers for
+#'   non-integer values. Possible values are: 0: 2-byte signed integers, 1:
+#'   4-byte signed integers, 2: 4-byte floating point numbers, and 3: 8-byte
+#'   floating point numbers. Storing floating point values as integers will
+#'   force truncation of the values.
 #' @return Returns an invisible boolean value indicating success (TRUE) or failure (FALSE).
 #' @examples
 #' \dontrun{
@@ -440,6 +444,15 @@ writeDTM <- function(
   if (storageFormat < -1 || storageFormat > 3) {
     stop(paste("Invalid value for storageFormat:", storageFormat, "valid values are -1, 0, 1, 2, and 3"))
   }
+
+  # deal with units
+  xyunitsInt <- 1
+  if (toupper(xyunits) == "F") xyunitsInt <- 0
+  if (toupper(xyunits) == "O") xyunitsInt <- 3
+
+  zunitsInt <- 1
+  if (toupper(zunits) == "F") zunitsInt <- 0
+  if (toupper(zunits) == "O") zunitsInt <- 3
 
   # check the data type
   if (is.matrix(x)) {
@@ -546,7 +559,7 @@ writeDTM <- function(
   writeBin(description, con, endian = "little")
   seek(con, 82, "start")
 
-  writeBin(3.0, con, size = 4, endian = "little")
+  writeBin(3.1, con, size = 4, endian = "little")
   writeBin(originX, con, size = 8, endian = "little")
   writeBin(originY, con, size = 8, endian = "little")
   writeBin(minZ, con, size = 8, endian = "little")
@@ -556,8 +569,8 @@ writeDTM <- function(
   writeBin(rowSpacing, con, size = 8, endian = "little")
   writeBin(as.integer(columns), con, size = 4, endian = "little")
   writeBin(as.integer(rows), con, size = 4, endian = "little")
-  writeBin(as.integer(xyunits), con, size = 2, endian = "little")
-  writeBin(as.integer(zunits), con, size = 2, endian = "little")
+  writeBin(as.integer(xyunitsInt), con, size = 2, endian = "little")
+  writeBin(as.integer(zunitsInt), con, size = 2, endian = "little")
   if (storageFormat == -1) {
     if (valsInt) {
       writeBin(0L, con, size = 2, endian = "little")

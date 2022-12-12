@@ -1,5 +1,5 @@
-#' @param xyunits character (\strong{required}): Units for LIDAR data XY (M for meters or F for feet).
-#' @param zunits character (\strong{required}): Units for LIDAR data elevations (M for meters or F for feet).
+#' @param xyunits character (\strong{required}): Units for LIDAR data XY (M for meters, F for feet, O for other or unknown).
+#' @param zunits character (\strong{required}): Units for LIDAR data elevations (M for meters, F for feet, O for other or unknown).
 #' @param coordsys numeric (\strong{required}): Coordinate system for LIDAR data:
 #'   0 for unknown
 #'   1 for UTM
