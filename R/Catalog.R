@@ -178,7 +178,7 @@ Catalog <- function(
   options <- addOption(options, outlier)
   options <- addOption(options, class)
   options <- addOption(options, validate)
-  options <- addOption(options, projection)
+  options <- addOption(options, projection, TRUE)
 
   # deal with required parameters...some may have defaults
   required <- addRequired(required, datafile, TRUE)

@@ -151,7 +151,7 @@ IntensityImage <- function(
   options <- addOption(options, intrange)
   options <- addOption(options, intcell)
   options <- addOption(options, void)
-  options <- addOption(options, projection)
+  options <- addOption(options, projection, TRUE)
   options <- addOption(options, class)
 
   # deal with required parameters...some may have defaults

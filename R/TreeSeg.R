@@ -181,7 +181,7 @@ TreeSeg <- function(
   options <- addOption(options, class)
   options <- addOption(options, clipfolder, TRUE)
   options <- addOption(options, htmultiplier)
-  options <- addOption(options, projection)
+  options <- addOption(options, projection, TRUE)
 
   # deal with required parameters...some may have defaults
   required <- addRequired(required, CHM, TRUE)

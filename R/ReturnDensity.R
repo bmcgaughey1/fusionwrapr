@@ -148,7 +148,7 @@ ReturnDensity <- function(
 
   # deal with options...
   # program-specific options
-  options <- addOption(options, projection)
+  options <- addOption(options, projection, TRUE)
   options <- addOption(options, class)
   options <- addOption(options, grid)
   options <- addOption(options, gridxy)

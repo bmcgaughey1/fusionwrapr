@@ -142,7 +142,7 @@ CanopyMaxima <- function(
   options <- addOption(options, mult)
   options <- addOption(options, res)
   options <- addOption(options, outxy)
-  options <- addOption(options, projection)
+  options <- addOption(options, projection, TRUE)
   options <- addOption(options, minmax)
 
   # deal with required parameters...some may have defaults
