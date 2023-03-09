@@ -4,7 +4,6 @@
 # fusionwrapr
 
 <!-- badges: start -->
-
 <!-- badges: end -->
 
 The fusionwrapr package provides functions to construct command lines
@@ -14,8 +13,20 @@ requires a working installation of FUSION. For installation details and
 FUSION documentation, go
 [here](http://forsys.sefs.uw.edu/fusion/fusionlatest.html).
 
-In addition, fusionwrapr provides some handy functions to simply tasks
-common when working with LIDAR data in a forestry context.
+To read LAZ format files, the LASzxip.dll and LASzip64.dll files must be
+copied from an installed version of LAStools into the FUSION install
+folder. Without these files, FUSION programs cannot read LAZ files.
+
+The FUSION install folder should also be added to the PATH environment
+variable. The FUSION manual has links to instructions to do this. If you
+choose not to add the FUSION install folder to the PATH, you will need
+to call setFUSIONpath() with the name of the FUSION install folder early
+in your code so the FUSION executables can be found and run.
+
+In addition to interfaces to FUSION command line tools, fusionwrapr
+provides some handy functions to simply tasks common when working with
+LIDAR data. There are function to read/write FUSION’s .dtm format and a
+function to read FUSION’s .lda point data format files.
 
 ## Installation
 
