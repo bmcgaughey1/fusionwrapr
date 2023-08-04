@@ -9,7 +9,8 @@ GetSurfaceValues(
   xLabel = "X",
   yLabel = "Y",
   idLabel = "Value",
-  surfaceFile = NULL
+  surfaceFile = NULL,
+  ...
 )
 }
 \arguments{
@@ -23,6 +24,8 @@ GetSurfaceValues(
 
 \item{surfaceFile}{character: Name for the input surface files (PLANS DTM format). \code{surfacefile} may
 be a wildcard or text list file (extension .txt).}
+
+\item{...}{Additional parameters that will be passed to \code{SurfaceSample}.}
 }
 \value{
 Returns a dataframe with an additional column containing the sampled surface values. If the

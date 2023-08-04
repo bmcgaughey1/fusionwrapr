@@ -80,6 +80,7 @@ ClipPlot <- function(
 #' @param idLabel character: Label for the new column in \code{df} containing the surface value.
 #' @param surfaceFile character: Name for the input surface files (PLANS DTM format). \code{surfacefile} may
 #'   be a wildcard or text list file (extension .txt).
+#' @param ... Additional parameters that will be passed to \code{SurfaceSample}.
 #' @return Returns a dataframe with an additional column containing the sampled surface values. If the
 #'   \code{surfacefile} does not cover the location or contains invalid data, values for locations will be -1.0.
 #' @examples
@@ -92,7 +93,8 @@ GetSurfaceValues <- function(
     xLabel = "X",
     yLabel = "Y",
     idLabel = "Value",
-    surfaceFile = NULL
+    surfaceFile = NULL,
+    ...
 ) {
   # check parameters
   err <- FALSE
@@ -119,7 +121,7 @@ GetSurfaceValues <- function(
 
   # call SurfaceSample to get surface values
   outFile <- tempfile()
-  SurfaceSample(surfaceFile, tFile, outFile, verbose = TRUE)
+  SurfaceSample(surfaceFile, tFile, outFile, ...)
 
   # read output file and merge into original data frame
   tdf <- utils::read.csv(outFile)

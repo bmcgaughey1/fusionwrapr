@@ -3,10 +3,6 @@
 # found an rFUSION package https://cran.r-project.org/web/packages/rFUSION/index.html but not many functions
 # and it doesn't look very robust
 #
-# I'm not sure I want to add all programs but I am starting with things I use most often and that I think will be
-# most useful. It takes about 60-90 minutes to add a new function and documentation (representing a single program).
-# There are about 20 programs...do the math!
-#
 # Some useful keyboard shortcuts for package authoring:
 #
 #   Install Package:           Ctrl + Shift + B

@@ -19,7 +19,7 @@ FilterData(
   nolaszipdll = FALSE,
   skipfilecheck = FALSE,
   lda = FALSE,
-  layers = NULL,
+  layers = FALSE,
   index = FALSE,
   invert = FALSE,
   minsd = NULL,
