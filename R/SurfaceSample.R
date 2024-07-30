@@ -118,6 +118,7 @@ SurfaceSample <- function(
   # program-specific options
   options <- addSwitch(options, noheader)
   options <- addSwitch(options, novoid)
+  options <- addSwitch(options, id)
 
   # deal with options...
   options <- addOption(options, pattern)
