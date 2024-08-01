@@ -161,6 +161,6 @@ Other LTKFunctions:
 \code{\link{TINSurfaceCreate}()},
 \code{\link{TopoMetrics}()},
 \code{\link{TreeSeg}()},
-\code{\link{fusionwrapr}}
+\code{\link{fusionwrapr-package}}
 }
 \concept{LTKFunctions}

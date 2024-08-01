@@ -218,7 +218,7 @@ Other LTKFunctions:
 \code{\link{ThinData}()},
 \code{\link{TopoMetrics}()},
 \code{\link{TreeSeg}()},
-\code{\link{fusionwrapr}}
+\code{\link{fusionwrapr-package}}
 
 Other LTKFunctions: 
 \code{\link{CSV2Grid}()},
@@ -251,6 +251,6 @@ Other LTKFunctions:
 \code{\link{ThinData}()},
 \code{\link{TopoMetrics}()},
 \code{\link{TreeSeg}()},
-\code{\link{fusionwrapr}}
+\code{\link{fusionwrapr-package}}
 }
 \concept{LTKFunctions}

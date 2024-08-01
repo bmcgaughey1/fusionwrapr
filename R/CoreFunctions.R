@@ -215,17 +215,17 @@ programName <- function(name, use64bit = FALSE) {
   if (use64bit) {
     # see if we have a FUSION install folder
     if (fusionrEnv$installPath != "") {
-      t <- paste0(fusionrEnv$installPath, name, "64")
+      t <- shQuote(paste0(fusionrEnv$installPath, name, "64"))
       if (file.exists(t)) {
-        invisible(paste0(fusionrEnv$installPath, name, "64"))
+        invisible(shQuote(paste0(fusionrEnv$installPath, name, "64")))
       } else {
-        invisible(paste0(fusionrEnv$installPath, name))
+        invisible(shQuote(paste0(fusionrEnv$installPath, name)))
       }
     } else {
-      invisible(paste0(name, "64"))
+      invisible(shQuote(paste0(name, "64")))
     }
   } else {
-    invisible(paste0(fusionrEnv$installPath, name))
+    invisible(shQuote(paste0(fusionrEnv$installPath, name)))
   }
 }
 
