@@ -555,6 +555,9 @@ writeDTM <- function(
 
   # open file and write header
   con = file(fileName, open = "wb")
+  if (!isOpen(con, rw = "write"))
+    stop(paste0("Could not open DTM file:", fileName))
+
   writeBin("PLANS-PC BINARY .DTM", con, endian = "little")
   writeBin(description, con, endian = "little")
   seek(con, 82, "start")
