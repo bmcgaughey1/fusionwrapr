@@ -66,7 +66,7 @@ SurfaceSample <- function(
     topo = NULL,
     noheader = FALSE,
     novoid = FALSE,
-    id = NULL,
+    id = FALSE,
     runCmd = TRUE,
     saveCmd = TRUE,
     cmdFile = NULL,
