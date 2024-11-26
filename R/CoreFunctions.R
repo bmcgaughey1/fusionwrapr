@@ -122,8 +122,9 @@ isOpt <- function(x) { invisible(!is.null(x)) }
 #' for command line switches. The resulting string is appended to \code{cl}.
 #'
 #' @param cl character string. Potentially contains other command line elements.
-#' @param opt object containing the switch value. The name of the object is used
-#'   when constructing the option text.
+#' @param opt object containing the boolean switch value. The name of the object
+#'   is used when constructing the option text. The option is only included when
+#'   the value is TRUE.
 #' @return A (invisible) string containing the modified \code{cl} string.
 #' @examples
 #' \dontrun{

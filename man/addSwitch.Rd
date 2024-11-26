@@ -9,8 +9,9 @@ addSwitch(cl, opt)
 \arguments{
 \item{cl}{character string. Potentially contains other command line elements.}
 
-\item{opt}{object containing the switch value. The name of the object is used
-when constructing the option text.}
+\item{opt}{object containing the boolean switch value. The name of the object
+is used when constructing the option text. The option is only included when
+the value is TRUE.}
 }
 \value{
 A (invisible) string containing the modified \code{cl} string.
