@@ -116,11 +116,11 @@ GetSurfaceValues <- function(
 
   # build new data frame for input and write to temp file
   tdf <- data.frame(X = df[, xLabel], Y = df[, yLabel])
-  tFile <- tempfile()
+  tFile <- tempfile(fileext = ".csv")
   utils::write.csv(tdf, tFile, row.names = FALSE)
 
   # call SurfaceSample to get surface values
-  outFile <- tempfile()
+  outFile <- tempfile(fileext = ".csv")
   SurfaceSample(surfaceFile, tFile, outFile, ...)
 
   # read output file and merge into original data frame
@@ -128,8 +128,8 @@ GetSurfaceValues <- function(
   df[[idLabel]] <- tdf[, 3]
 
   # delete files
-  #unlink(tFile)
-  #unlink(outFile)
+  unlink(tFile)
+  unlink(outFile)
 
   # return original data frame with new column
   return(df)
