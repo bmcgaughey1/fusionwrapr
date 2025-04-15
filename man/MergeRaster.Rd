@@ -124,6 +124,7 @@ Other LTKFunctions:
 \code{\link{JoinDB}()},
 \code{\link{MergeDTM}()},
 \code{\link{MergeData}()},
+\code{\link{PolyClipData}()},
 \code{\link{RepairGridDTM}()},
 \code{\link{ReturnDensity}()},
 \code{\link{SplitDTM}()},

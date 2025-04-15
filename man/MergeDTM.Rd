@@ -137,6 +137,7 @@ Other LTKFunctions:
 \code{\link{JoinDB}()},
 \code{\link{MergeData}()},
 \code{\link{MergeRaster}()},
+\code{\link{PolyClipData}()},
 \code{\link{RepairGridDTM}()},
 \code{\link{ReturnDensity}()},
 \code{\link{SplitDTM}()},

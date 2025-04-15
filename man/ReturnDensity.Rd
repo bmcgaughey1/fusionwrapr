@@ -181,6 +181,7 @@ Other LTKFunctions:
 \code{\link{MergeDTM}()},
 \code{\link{MergeData}()},
 \code{\link{MergeRaster}()},
+\code{\link{PolyClipData}()},
 \code{\link{RepairGridDTM}()},
 \code{\link{SplitDTM}()},
 \code{\link{SurfaceSample}()},

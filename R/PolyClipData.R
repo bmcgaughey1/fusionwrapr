@@ -52,7 +52,7 @@
 #' }
 #' @family LTKFunctions
 #' @export
-MergeData <- function(
+PolyClipData <- function(
     polyfile = NULL,
     outputfile = NULL,
     datafile = NULL,
