@@ -108,7 +108,7 @@ PolyClipData <- function(
   cmdClear <- FALSE
 
   # build command line
-  cmd <- programName("MergeData", use64bit)
+  cmd <- programName("PolyClipData", use64bit)
 
   options <- ""
   required <- ""
