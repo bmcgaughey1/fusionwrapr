@@ -127,6 +127,6 @@ Other LTKFunctions:
 \code{\link{ThinData}()},
 \code{\link{TopoMetrics}()},
 \code{\link{TreeSeg}()},
-\code{\link{fusionwrapr-package}}
+\code{\link{fusionwrapr}}
 }
 \concept{LTKFunctions}
