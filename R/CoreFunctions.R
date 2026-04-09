@@ -216,7 +216,7 @@ programName <- function(name, use64bit = FALSE) {
   if (use64bit) {
     # see if we have a FUSION install folder
     if (fusionrEnv$installPath != "") {
-      t <- (paste0(fusionrEnv$installPath, name, "64"))
+      t <- (paste0(fusionrEnv$installPath, name, "64.exe"))
       if (file.exists(t)) {
         invisible((paste0(fusionrEnv$installPath, name, "64")))
       } else {
