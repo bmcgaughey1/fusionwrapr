@@ -183,6 +183,6 @@ Other LTKFunctions:
 \code{\link{TINSurfaceCreate}()},
 \code{\link{ThinData}()},
 \code{\link{TreeSeg}()},
-\code{\link{fusionwrapr}}
+\code{\link{fusionwrapr-package}}
 }
 \concept{LTKFunctions}
